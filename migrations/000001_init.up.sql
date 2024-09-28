@@ -48,13 +48,16 @@ CREATE TABLE "kermesses_stands" (
   UNIQUE ("kermesse_id", "stand_id")
 );
 
---- Table: Participations
+--- Table: Interactions
 
-CREATE TABLE "participations" (
+CREATE TYPE iteractions_type_enum AS ENUM ('CONSUMPTION', 'ACTIVITY');
+
+CREATE TABLE "iteractions" (
   "id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL REFERENCES "users"("id"), -- child / parent
   "kermesse_id" INTEGER NOT NULL REFERENCES "kermesses"("id"),
   "stand_id" INTEGER NOT NULL REFERENCES "stands"("id"),
+  "type" iteractions_type_enum NOT NULL,
   "credit" INTEGER NOT NULL DEFAULT 0,
   "point" INTEGER NOT NULL DEFAULT 0
 );
