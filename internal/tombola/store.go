@@ -11,6 +11,7 @@ type TombolaStore interface {
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 	UpdateStatus(id int, status string) error
+	UpdateUser(id int, input map[string]interface{}) error
 }
 
 type Store struct {
@@ -40,8 +41,8 @@ func (s *Store) FindById(id int) (types.Tombola, error) {
 }
 
 func (s *Store) Create(input map[string]interface{}) error {
-	query := "INSERT INTO tombolas (kermesse_id, user_id, name, price, gift) VALUES ($1, $2, $3, $4, $5)"
-	_, err := s.db.Exec(query, input["kermesse_id"], input["user_id"], input["name"], input["price"], input["gift"])
+	query := "INSERT INTO tombolas (kermesse_id, name, price, gift) VALUES ($1, $2, $3, $4)"
+	_, err := s.db.Exec(query, input["kermesse_id"], input["name"], input["price"], input["gift"])
 
 	return err
 }
@@ -54,8 +55,15 @@ func (s *Store) Update(id int, input map[string]interface{}) error {
 }
 
 func (s *Store) UpdateStatus(id int, status string) error {
-	query := "UPDATE tombolas SET status=$1 WHERE id=$4"
+	query := "UPDATE tombolas SET status=$1 WHERE id=$2"
 	_, err := s.db.Exec(query, status, id)
+
+	return err
+}
+
+func (s *Store) UpdateUser(id int, input map[string]interface{}) error {
+	query := "UPDATE tombolas SET user_id=$1, status=$2 WHERE id=$3"
+	_, err := s.db.Exec(query, input["user_id"], input["status"], id)
 
 	return err
 }

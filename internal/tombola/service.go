@@ -14,7 +14,8 @@ type TombolaService interface {
 	Get(ctx context.Context, id int) (types.Tombola, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
-	UpdateStatus(ctx context.Context, id int) error
+	Start(ctx context.Context, id int) error
+	UpdateWinner(ctx context.Context, id int, input map[string]interface{}) error
 }
 
 type Service struct {
@@ -95,8 +96,8 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	return nil
 }
 
-func (s *Service) UpdateStatus(ctx context.Context, id int) error {
-	tombola, err := s.store.FindById(id)
+func (s *Service) Start(ctx context.Context, id int) error {
+	_, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -110,12 +111,34 @@ func (s *Service) UpdateStatus(ctx context.Context, id int) error {
 		}
 	}
 
-	newStatus := types.TombolaStatusStarted
-	if tombola.Status == types.TombolaStatusStarted {
-		newStatus = types.TombolaStatusEnded
+	err = s.store.UpdateStatus(id, types.TombolaStatusStarted)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
 	}
 
-	err = s.store.UpdateStatus(id, newStatus)
+	return nil
+}
+
+func (s *Service) UpdateWinner(ctx context.Context, id int, input map[string]interface{}) error {
+	_, err := s.store.FindById(id)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	input["status"] = types.TombolaStatusEnded
+	err = s.store.UpdateUser(id, input)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
