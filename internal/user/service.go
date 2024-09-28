@@ -21,7 +21,7 @@ type UserService interface {
 
 	SignUp(ctx context.Context, input map[string]interface{}) error
 	SignIn(ctx context.Context, input map[string]interface{}) (types.UserBasicWithToken, error)
-	GetMe(ctx context.Context) (map[string]interface{}, error)
+	GetMe(ctx context.Context) (types.UserBasic, error)
 }
 
 type Service struct {
