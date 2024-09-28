@@ -39,8 +39,8 @@ func (s *Store) FindById(id int) (types.Stand, error) {
 }
 
 func (s *Store) Create(input map[string]interface{}) error {
-	query := "INSERT INTO stands (user_id, name, description, price, stock) VALUES ($1, $2, $3, $4, $5)"
-	_, err := s.db.Exec(query, input["user_id"], input["name"], input["description"], input["price"], input["stock"])
+	query := "INSERT INTO stands (user_id, name, description, type, price, stock) VALUES ($1, $2, $3, $4, $5, $6)"
+	_, err := s.db.Exec(query, input["user_id"], input["name"], input["description"], input["type"], input["price"], input["stock"])
 
 	return err
 }
