@@ -13,11 +13,14 @@ CREATE TABLE "users" (
 
 --- Table: Stands
 
+CREATE TYPE stands_type_enum AS ENUM ('BUYER', 'ACTIVITY');
+
 CREATE TABLE "stands" (
   "id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL REFERENCES "users"("id"), -- stand holder
   "name" VARCHAR(255) NOT NULL,
   "description" TEXT DEFAULT '',
+  "type" stands_type_enum NOT NULL,
   "price" INTEGER NOT NULL DEFAULT 0,
   "stock" INTEGER NOT NULL DEFAULT 0
 );
@@ -66,7 +69,8 @@ CREATE TABLE "tombolas" (
   "user_id" INTEGER REFERENCES "users"("id"), -- child
   "name" VARCHAR(255) NOT NULL,
   "status" VARCHAR(255) NOT NULL DEFAULT 'CREATED',
-  "price" INTEGER NOT NULL DEFAULT 0
+  "price" INTEGER NOT NULL DEFAULT 0,
+  "gift" VARCHAR(255) NOT NULL
 );
 
 --- Table: Tickets
