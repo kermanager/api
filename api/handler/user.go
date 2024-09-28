@@ -25,6 +25,7 @@ func NewUserHandler(service user.UserService, store user.UserStore) *UserHandler
 
 func (h *UserHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/users/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.store))).Methods(http.MethodGet)
+	mux.Handle("/users/invite", errors.ErrorHandler(middleware.IsAuth(h.Get, h.store))).Methods(http.MethodPost)
 
 	mux.Handle("/sign-up", errors.ErrorHandler(h.SignUp)).Methods(http.MethodPost)
 	mux.Handle("/sign-in", errors.ErrorHandler(h.SignIn)).Methods(http.MethodPost)
@@ -47,6 +48,29 @@ func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if err := json.Write(w, http.StatusOK, user); err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
+}
+
+func (h *UserHandler) Invite(w http.ResponseWriter, r *http.Request) error {
+	var input map[string]interface{}
+	if err := json.Parse(r, &input); err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	if err := h.service.Invite(r.Context(), input); err != nil {
+		return err
+	}
+
+	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,

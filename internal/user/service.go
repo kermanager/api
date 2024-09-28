@@ -10,12 +10,14 @@ import (
 	goJwt "github.com/golang-jwt/jwt/v5"
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/pkg/errors"
+	"github.com/kermanager/pkg/generator"
 	"github.com/kermanager/pkg/hasher"
 	"github.com/kermanager/pkg/jwt"
 )
 
 type UserService interface {
 	Get(ctx context.Context, id int) (types.UserBasic, error)
+	Invite(ctx context.Context, input map[string]interface{}) error
 
 	SignUp(ctx context.Context, input map[string]interface{}) error
 	SignIn(ctx context.Context, input map[string]interface{}) (types.UserBasicWithToken, error)
@@ -54,6 +56,49 @@ func (s *Service) Get(ctx context.Context, id int) (types.UserBasic, error) {
 		Role:   user.Role,
 		Credit: user.Credit,
 	}, nil
+}
+
+func (s *Service) Invite(ctx context.Context, input map[string]interface{}) error {
+	_, err := s.store.FindByEmail(input["email"].(string))
+	if err == nil {
+		return errors.CustomError{
+			Key: errors.EmailAlreadyExists,
+			Err: goErrors.New("email already exists"),
+		}
+	}
+
+	randomPassword, err := generator.RandomPassword(8)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	hashedPassword, err := hasher.Hash(randomPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.store.Create(map[string]interface{}{
+		"name":     input["name"],
+		"email":    input["email"],
+		"password": hashedPassword,
+		"role":     types.UserRoleChild,
+	})
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	// TODO: Send email :
+	// - To: input["email"]
+	// - Subject: "Invitation to join our platform"
+	// - Body: "You have been invited to join our platform. Your credentials are as follows: Email: input["email"], Password: randomPassword"
+
+	return nil
 }
 
 func (s *Service) SignUp(ctx context.Context, input map[string]interface{}) error {
