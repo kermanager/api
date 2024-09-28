@@ -25,7 +25,7 @@ func NewUserHandler(service user.UserService, store user.UserStore) *UserHandler
 
 func (h *UserHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/users/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.store))).Methods(http.MethodGet)
-	mux.Handle("/users/invite", errors.ErrorHandler(middleware.IsAuth(h.Get, h.store))).Methods(http.MethodPost)
+	mux.Handle("/users/invite", errors.ErrorHandler(middleware.IsAuth(h.Invite, h.store))).Methods(http.MethodPost)
 
 	mux.Handle("/sign-up", errors.ErrorHandler(h.SignUp)).Methods(http.MethodPost)
 	mux.Handle("/sign-in", errors.ErrorHandler(h.SignIn)).Methods(http.MethodPost)
