@@ -10,6 +10,9 @@ type KermesseStore interface {
 	FindById(id int) (types.Kermesse, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
+
+	AddUser(input map[string]interface{}) error
+	AddStand(input map[string]interface{}) error
 }
 
 type Store struct {
@@ -48,6 +51,20 @@ func (s *Store) Create(input map[string]interface{}) error {
 func (s *Store) Update(id int, input map[string]interface{}) error {
 	query := "UPDATE kermesses SET name=$1, description=$2 WHERE id=$3"
 	_, err := s.db.Exec(query, input["name"], input["description"], id)
+
+	return err
+}
+
+func (s *Store) AddUser(input map[string]interface{}) error {
+	query := "INSERT INTO kermesses_users (kermesse_id, user_id) VALUES ($1, $2)"
+	_, err := s.db.Exec(query, input["kermesse_id"], input["user_id"])
+
+	return err
+}
+
+func (s *Store) AddStand(input map[string]interface{}) error {
+	query := "INSERT INTO kermesses_stands (kermesse_id, stand_id) VALUES ($1, $2)"
+	_, err := s.db.Exec(query, input["kermesse_id"], input["stand_id"])
 
 	return err
 }
