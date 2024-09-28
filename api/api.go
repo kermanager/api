@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/api/handler"
+	"github.com/kermanager/internal/kermesse"
 	"github.com/kermanager/internal/stand"
 	"github.com/kermanager/internal/user"
 )
@@ -40,6 +41,11 @@ func (s *APIServer) Start() error {
 	standService := stand.NewService(standStore)
 	standHandler := handler.NewStandHandler(standService, userStore)
 	standHandler.RegisterRoutes(router)
+
+	kermesseStore := kermesse.NewStore(s.db)
+	kermesseService := kermesse.NewService(kermesseStore)
+	kermesseHandler := handler.NewKermesseHandler(kermesseService, userStore)
+	kermesseHandler.RegisterRoutes(router)
 
 	log.Printf("🚀 Starting server on %s", s.address)
 	return http.ListenAndServe(s.address, router)
