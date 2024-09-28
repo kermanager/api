@@ -43,3 +43,10 @@ func (s *Store) Create(input map[string]interface{}) error {
 
 	return err
 }
+
+func (s *Store) UpdateCredit(id int, n int) error {
+	query := "UPDATE users SET credit=credit+$1 WHERE id=$2"
+	_, err := s.db.Exec(query, n, id)
+
+	return err
+}

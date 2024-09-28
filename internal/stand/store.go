@@ -10,6 +10,7 @@ type StandStore interface {
 	FindById(id int) (types.Stand, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
+	UpdateStock(id int, n int) error
 }
 
 type Store struct {
@@ -48,6 +49,13 @@ func (s *Store) Create(input map[string]interface{}) error {
 func (s *Store) Update(id int, input map[string]interface{}) error {
 	query := "UPDATE stands SET name=$1, description=$2, price=$3, stock=$4 WHERE id=$5"
 	_, err := s.db.Exec(query, input["name"], input["description"], input["price"], input["stock"], id)
+
+	return err
+}
+
+func (s *Store) UpdateStock(id int, n int) error {
+	query := "UPDATE stands SET stock=stock+$1 WHERE id=$2"
+	_, err := s.db.Exec(query, n, id)
 
 	return err
 }
