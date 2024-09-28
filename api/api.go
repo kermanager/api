@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/api/handler"
+	"github.com/kermanager/internal/stand"
 	"github.com/kermanager/internal/user"
 )
 
@@ -34,6 +35,11 @@ func (s *APIServer) Start() error {
 	userService := user.NewService(userStore)
 	userHandler := handler.NewUserHandler(userService, userStore)
 	userHandler.RegisterRoutes(router)
+
+	standStore := stand.NewStore(s.db)
+	standService := stand.NewService(standStore)
+	standHandler := handler.NewStandHandler(standService, userStore)
+	standHandler.RegisterRoutes(router)
 
 	log.Printf("🚀 Starting server on %s", s.address)
 	return http.ListenAndServe(s.address, router)
