@@ -10,6 +10,7 @@ import (
 	"github.com/kermanager/internal/interaction"
 	"github.com/kermanager/internal/kermesse"
 	"github.com/kermanager/internal/stand"
+	"github.com/kermanager/internal/tombola"
 	"github.com/kermanager/internal/user"
 )
 
@@ -52,6 +53,11 @@ func (s *APIServer) Start() error {
 	interactionService := interaction.NewService(interactionStore)
 	interactionHandler := handler.NewInteractionHandler(interactionService, userStore)
 	interactionHandler.RegisterRoutes(router)
+
+	tombolaStore := tombola.NewStore(s.db)
+	tombolaService := tombola.NewService(tombolaStore)
+	tombolaHandler := handler.NewTombolaHandler(tombolaService, userStore)
+	tombolaHandler.RegisterRoutes(router)
 
 	log.Printf("🚀 Starting server on %s", s.address)
 	return http.ListenAndServe(s.address, router)
