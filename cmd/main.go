@@ -13,7 +13,7 @@ import (
 func main() {
 	// load environment variables
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("❌ Error loading .env file: %v", err)
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	// connect to the database
@@ -25,7 +25,9 @@ func main() {
 		Name:     os.Getenv("DB_NAME"),
 	})
 	if err != nil {
-		log.Fatalf("❌ Error connecting to the database: %v", err)
+		log.Fatalf("Error connecting to the database: %v", err)
+	} else {
+		log.Println("Successfully connected to the database.")
 	}
 	defer db.Close()
 
@@ -33,6 +35,6 @@ func main() {
 	address := fmt.Sprintf("%s:%s", os.Getenv("HOST"), os.Getenv("PORT"))
 	server := api.NewAPIServer(address, db)
 	if err := server.Start(); err != nil {
-		log.Fatalf("❌ Error starting the server: %v", err)
+		log.Fatalf("Error starting the server: %v", err)
 	}
 }

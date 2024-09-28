@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -27,6 +26,5 @@ func NewPostgres(config PostgresConfig) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	log.Println("🚀 Successfully connected to the database.")
 	return db, nil
 }
