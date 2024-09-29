@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	goErrors "errors"
 
-	"github.com/kermanager/internal/ticket"
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/pkg/errors"
 )
@@ -16,18 +15,16 @@ type TombolaService interface {
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
 	Start(ctx context.Context, id int) error
-	End(ctx context.Context, id int, input map[string]interface{}) error
+	End(ctx context.Context, id int) error
 }
 
 type Service struct {
-	store       TombolaStore
-	ticketStore ticket.TicketStore
+	store TombolaStore
 }
 
-func NewService(store TombolaStore, ticketStore ticket.TicketStore) *Service {
+func NewService(store TombolaStore) *Service {
 	return &Service{
-		store:       store,
-		ticketStore: ticketStore,
+		store: store,
 	}
 }
 
@@ -125,8 +122,8 @@ func (s *Service) Start(ctx context.Context, id int) error {
 	return nil
 }
 
-func (s *Service) End(ctx context.Context, id int, input map[string]interface{}) error {
-	_, err := s.store.FindById(id)
+func (s *Service) End(ctx context.Context, id int) error {
+	tombola, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -140,30 +137,14 @@ func (s *Service) End(ctx context.Context, id int, input map[string]interface{})
 		}
 	}
 
-	err = s.store.UpdateStatus(id, types.TombolaStatusEnded)
-	if err != nil {
+	if tombola.Status != types.TombolaStatusStarted {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Key: errors.BadRequest,
+			Err: goErrors.New("tombola is not started"),
 		}
 	}
 
-	// TODO: check for bug
-	ticket, err := s.ticketStore.FindByUserIdAndTombolaId(input["user_id"].(int), id)
-	if err != nil {
-		if goErrors.Is(err, sql.ErrNoRows) {
-			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
-			}
-		}
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	err = s.ticketStore.SetWinner(ticket.Id)
+	err = s.store.SetWinner(id)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,

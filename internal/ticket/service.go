@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	goErrors "errors"
 
+	"github.com/kermanager/internal/tombola"
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/pkg/errors"
+	"github.com/kermanager/pkg/utils"
 )
 
 type TicketService interface {
@@ -16,12 +18,14 @@ type TicketService interface {
 }
 
 type Service struct {
-	store TicketStore
+	store        TicketStore
+	tombolaStore tombola.TombolaStore
 }
 
-func NewService(store TicketStore) *Service {
+func NewService(store TicketStore, tombolaStore tombola.TombolaStore) *Service {
 	return &Service{
-		store: store,
+		store:        store,
+		tombolaStore: tombolaStore,
 	}
 }
 
@@ -56,7 +60,36 @@ func (s *Service) Get(ctx context.Context, id int) (types.Ticket, error) {
 }
 
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
-	err := s.store.Create(input)
+	tombolaId, err := utils.GetIntFromMap(input, "tombola_id")
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: err,
+		}
+	}
+
+	tombola, err := s.tombolaStore.FindById(tombolaId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	if tombola.Status != types.TombolaStatusStarted {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("tombola is not started or already finished"),
+		}
+	}
+
+	err = s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,

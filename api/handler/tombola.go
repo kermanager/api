@@ -163,15 +163,7 @@ func (h *TombolaHandler) End(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	var input map[string]interface{}
-	if err := json.Parse(r, &input); err != nil {
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	if err := h.service.End(r.Context(), id, input); err != nil {
+	if err := h.service.End(r.Context(), id); err != nil {
 		return err
 	}
 

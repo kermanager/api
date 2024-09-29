@@ -11,6 +11,7 @@ type TombolaStore interface {
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 	UpdateStatus(id int, status string) error
+	SetWinner(id int) error
 }
 
 type Store struct {
@@ -56,6 +57,45 @@ func (s *Store) Update(id int, input map[string]interface{}) error {
 func (s *Store) UpdateStatus(id int, status string) error {
 	query := "UPDATE tombolas SET status=$1 WHERE id=$2"
 	_, err := s.db.Exec(query, status, id)
+
+	return err
+}
+
+func (s *Store) SetWinner(id int) error {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	query := "UPDATE tombolas SET status=$1 WHERE id=$2"
+	_, err = tx.Exec(query, types.TombolaStatusEnded, id)
+	if err != nil {
+		return err
+	}
+
+	query = `
+		UPDATE tickets
+		SET is_winner = true
+		WHERE id = (
+			SELECT id
+			FROM tickets
+			WHERE tombola_id = $1
+			ORDER BY RANDOM()
+			LIMIT 1
+		)
+		AND tombola_id = $1
+	`
+	_, err = tx.Exec(query, id)
+	if err != nil {
+		return err
+	}
 
 	return err
 }
