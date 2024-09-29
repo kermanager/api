@@ -13,11 +13,13 @@ import (
 	"github.com/kermanager/pkg/generator"
 	"github.com/kermanager/pkg/hasher"
 	"github.com/kermanager/pkg/jwt"
+	"github.com/kermanager/pkg/utils"
 )
 
 type UserService interface {
 	Get(ctx context.Context, id int) (types.UserBasic, error)
 	Invite(ctx context.Context, input map[string]interface{}) error
+	Pay(ctx context.Context, input map[string]interface{}) error
 
 	SignUp(ctx context.Context, input map[string]interface{}) error
 	SignIn(ctx context.Context, input map[string]interface{}) (types.UserBasicWithToken, error)
@@ -80,11 +82,20 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 		return err
 	}
 
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+
 	err = s.store.Create(map[string]interface{}{
-		"name":     input["name"],
-		"email":    input["email"],
-		"password": hashedPassword,
-		"role":     types.UserRoleChild,
+		"name":      input["name"],
+		"email":     input["email"],
+		"password":  hashedPassword,
+		"role":      types.UserRoleChild,
+		"parent_id": userId,
 	})
 	if err != nil {
 		return errors.CustomError{
@@ -97,6 +108,89 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	// - To: input["email"]
 	// - Subject: "Invitation to join our platform"
 	// - Body: "You have been invited to join our platform. Your credentials are as follows: Email: input["email"], Password: randomPassword"
+
+	return nil
+}
+
+func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
+	childId, error := utils.GetIntFromMap(input, "child_id")
+	if error != nil {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: error,
+		}
+	}
+	child, err := s.store.FindById(childId)
+	if err == nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("child not found"),
+		}
+	}
+
+	parentId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	parent, err := s.store.FindById(parentId)
+	if err == nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("parent not found"),
+		}
+	}
+
+	if child.ParentId == nil || *child.ParentId != parent.Id {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
+		}
+	}
+
+	amount, error := utils.GetIntFromMap(input, "amount")
+	if error != nil {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: error,
+		}
+	}
+	if parent.Credit < amount {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("insufficient credit"),
+		}
+	}
+
+	err = s.store.UpdateCredit(childId, amount)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	err = s.store.UpdateCredit(parentId, -amount)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
 
 	return nil
 }
@@ -115,6 +209,7 @@ func (s *Service) SignUp(ctx context.Context, input map[string]interface{}) erro
 		return err
 	}
 	input["password"] = hashedPassword
+	input["parent_id"] = nil
 
 	err = s.store.Create(input)
 	if err != nil {

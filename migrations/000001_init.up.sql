@@ -8,7 +8,8 @@ CREATE TABLE "users" (
   "email" VARCHAR(255) UNIQUE NOT NULL,
   "password" VARCHAR(255) NOT NULL,
   "role" users_role_enum NOT NULL,
-  "credit" INTEGER NOT NULL DEFAULT 0
+  "credit" INTEGER NOT NULL DEFAULT 0,
+  "parent_id" INTEGER REFERENCES "users"("id") DEFAULT NULL -- parent
 );
 
 --- Table: Stands

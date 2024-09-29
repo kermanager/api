@@ -9,6 +9,7 @@ type UserStore interface {
 	FindById(id int) (types.User, error)
 	FindByEmail(email string) (types.User, error)
 	Create(input map[string]interface{}) error
+	UpdateCredit(id int, amount int) error
 }
 
 type Store struct {
@@ -38,15 +39,15 @@ func (s *Store) FindByEmail(email string) (types.User, error) {
 }
 
 func (s *Store) Create(input map[string]interface{}) error {
-	query := "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)"
-	_, err := s.db.Exec(query, input["name"], input["email"], input["password"], input["role"])
+	query := "INSERT INTO users (parent_id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)"
+	_, err := s.db.Exec(query, input["parent_id"], input["name"], input["email"], input["password"], input["role"])
 
 	return err
 }
 
-func (s *Store) UpdateCredit(id int, n int) error {
+func (s *Store) UpdateCredit(id int, amount int) error {
 	query := "UPDATE users SET credit=credit+$1 WHERE id=$2"
-	_, err := s.db.Exec(query, n, id)
+	_, err := s.db.Exec(query, amount, id)
 
 	return err
 }

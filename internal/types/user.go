@@ -16,6 +16,7 @@ const (
 
 type User struct {
 	Id       int    `json:"id" db:"id"`
+	ParentId *int   `json:"parentId" db:"parent_id"`
 	Name     string `json:"name" db:"name"`
 	Email    string `json:"email" db:"email"`
 	Password string `json:"password" db:"password"`
