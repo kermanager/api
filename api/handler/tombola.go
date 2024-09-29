@@ -30,7 +30,7 @@ func (h *TombolaHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/tombolas", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore))).Methods(http.MethodPost)
 	mux.Handle("/tombolas/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore))).Methods(http.MethodPatch)
 	mux.Handle("/tombolas/{id}/start", errors.ErrorHandler(middleware.IsAuth(h.Start, h.userStore))).Methods(http.MethodPatch)
-	mux.Handle("/tombolas/{id}/winner", errors.ErrorHandler(middleware.IsAuth(h.UpdateWinner, h.userStore))).Methods(http.MethodPatch)
+	mux.Handle("/tombolas/{id}/end", errors.ErrorHandler(middleware.IsAuth(h.End, h.userStore))).Methods(http.MethodPatch)
 }
 
 func (h *TombolaHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
@@ -153,7 +153,7 @@ func (h *TombolaHandler) Start(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *TombolaHandler) UpdateWinner(w http.ResponseWriter, r *http.Request) error {
+func (h *TombolaHandler) End(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -171,7 +171,7 @@ func (h *TombolaHandler) UpdateWinner(w http.ResponseWriter, r *http.Request) er
 		}
 	}
 
-	if err := h.service.Update(r.Context(), id, input); err != nil {
+	if err := h.service.End(r.Context(), id, input); err != nil {
 		return err
 	}
 

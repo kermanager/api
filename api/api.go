@@ -55,15 +55,15 @@ func (s *APIServer) Start() error {
 	interactionHandler := handler.NewInteractionHandler(interactionService, userStore)
 	interactionHandler.RegisterRoutes(router)
 
-	tombolaStore := tombola.NewStore(s.db)
-	tombolaService := tombola.NewService(tombolaStore)
-	tombolaHandler := handler.NewTombolaHandler(tombolaService, userStore)
-	tombolaHandler.RegisterRoutes(router)
-
 	ticketStore := ticket.NewStore(s.db)
 	ticketService := ticket.NewService(ticketStore)
 	ticketHandler := handler.NewTicketHandler(ticketService, userStore)
 	ticketHandler.RegisterRoutes(router)
+
+	tombolaStore := tombola.NewStore(s.db)
+	tombolaService := tombola.NewService(tombolaStore, ticketStore)
+	tombolaHandler := handler.NewTombolaHandler(tombolaService, userStore)
+	tombolaHandler.RegisterRoutes(router)
 
 	log.Printf("Starting server on %s", s.address)
 	return http.ListenAndServe(s.address, router)

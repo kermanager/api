@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	goErrors "errors"
 
+	"github.com/kermanager/internal/ticket"
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/pkg/errors"
 )
@@ -15,16 +16,18 @@ type TombolaService interface {
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
 	Start(ctx context.Context, id int) error
-	UpdateWinner(ctx context.Context, id int, input map[string]interface{}) error
+	End(ctx context.Context, id int, input map[string]interface{}) error
 }
 
 type Service struct {
-	store TombolaStore
+	store       TombolaStore
+	ticketStore ticket.TicketStore
 }
 
-func NewService(store TombolaStore) *Service {
+func NewService(store TombolaStore, ticketStore ticket.TicketStore) *Service {
 	return &Service{
-		store: store,
+		store:       store,
+		ticketStore: ticketStore,
 	}
 }
 
@@ -122,7 +125,7 @@ func (s *Service) Start(ctx context.Context, id int) error {
 	return nil
 }
 
-func (s *Service) UpdateWinner(ctx context.Context, id int, input map[string]interface{}) error {
+func (s *Service) End(ctx context.Context, id int, input map[string]interface{}) error {
 	_, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
@@ -137,8 +140,30 @@ func (s *Service) UpdateWinner(ctx context.Context, id int, input map[string]int
 		}
 	}
 
-	input["status"] = types.TombolaStatusEnded
-	err = s.store.UpdateUser(id, input)
+	err = s.store.UpdateStatus(id, types.TombolaStatusEnded)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	// TODO: check for bug
+	ticket, err := s.ticketStore.FindByUserIdAndTombolaId(input["user_id"].(int), id)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	err = s.ticketStore.SetWinner(ticket.Id)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,

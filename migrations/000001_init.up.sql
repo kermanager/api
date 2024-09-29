@@ -69,7 +69,6 @@ CREATE TYPE tombolas_status_enum AS ENUM ('CREATED', 'STARTED', 'ENDED');
 CREATE TABLE "tombolas" (
   "id" SERIAL PRIMARY KEY,
   "kermesse_id" INTEGER NOT NULL REFERENCES "kermesses"("id"),
-  "user_id" INTEGER REFERENCES "users"("id"), -- child
   "name" VARCHAR(255) NOT NULL,
   "status" VARCHAR(255) NOT NULL DEFAULT 'CREATED',
   "price" INTEGER NOT NULL DEFAULT 0,
@@ -82,5 +81,5 @@ CREATE TABLE "tickets" (
   "id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL REFERENCES "users"("id"), -- child
   "tombola_id" INTEGER NOT NULL REFERENCES "tombolas"("id"),
-  UNIQUE ("tombola_id", "user_id")
+  "is_winner" BOOLEAN NOT NULL DEFAULT FALSE
 );

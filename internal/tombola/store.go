@@ -11,7 +11,6 @@ type TombolaStore interface {
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 	UpdateStatus(id int, status string) error
-	UpdateUser(id int, input map[string]interface{}) error
 }
 
 type Store struct {
@@ -57,13 +56,6 @@ func (s *Store) Update(id int, input map[string]interface{}) error {
 func (s *Store) UpdateStatus(id int, status string) error {
 	query := "UPDATE tombolas SET status=$1 WHERE id=$2"
 	_, err := s.db.Exec(query, status, id)
-
-	return err
-}
-
-func (s *Store) UpdateUser(id int, input map[string]interface{}) error {
-	query := "UPDATE tombolas SET user_id=$1, status=$2 WHERE id=$3"
-	_, err := s.db.Exec(query, input["user_id"], input["status"], id)
 
 	return err
 }
