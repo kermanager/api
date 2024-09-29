@@ -113,15 +113,15 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 }
 
 func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
-	childId, error := utils.GetIntFromMap(input, "child_id")
-	if error != nil {
+	childId, err := utils.GetIntFromMap(input, "child_id")
+	if err != nil {
 		return errors.CustomError{
 			Key: errors.BadRequest,
-			Err: error,
+			Err: err,
 		}
 	}
 	child, err := s.store.FindById(childId)
-	if err == nil {
+	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
 				Key: errors.NotFound,
@@ -142,7 +142,7 @@ func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
 		}
 	}
 	parent, err := s.store.FindById(parentId)
-	if err == nil {
+	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
 				Key: errors.NotFound,
