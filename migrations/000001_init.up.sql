@@ -14,7 +14,7 @@ CREATE TABLE "users" (
 
 --- Table: Stands
 
-CREATE TYPE stands_type_enum AS ENUM ('BUYER', 'ACTIVITY');
+CREATE TYPE stands_type_enum AS ENUM ('CONSUMPTION', 'ACTIVITY');
 
 CREATE TABLE "stands" (
   "id" SERIAL PRIMARY KEY,
@@ -52,6 +52,7 @@ CREATE TABLE "kermesses_stands" (
 --- Table: Interactions
 
 CREATE TYPE interactions_type_enum AS ENUM ('CONSUMPTION', 'ACTIVITY');
+CREATE TYPE interactions_status_enum AS ENUM ('STARTED', 'ENDED');
 
 CREATE TABLE "interactions" (
   "id" SERIAL PRIMARY KEY,
@@ -59,6 +60,7 @@ CREATE TABLE "interactions" (
   "kermesse_id" INTEGER NOT NULL REFERENCES "kermesses"("id"),
   "stand_id" INTEGER NOT NULL REFERENCES "stands"("id"),
   "type" interactions_type_enum NOT NULL,
+  "status" interactions_status_enum NOT NULL DEFAULT 'STARTED',
   "credit" INTEGER NOT NULL DEFAULT 0,
   "point" INTEGER NOT NULL DEFAULT 0
 );

@@ -46,8 +46,8 @@ func (s *Store) Create(input map[string]interface{}) error {
 }
 
 func (s *Store) Update(id int, input map[string]interface{}) error {
-	query := "UPDATE interactions SET point=$1 WHERE id=$2"
-	_, err := s.db.Exec(query, input["point"], id)
+	query := "UPDATE interactions SET status=$1, point=$2 WHERE id=$3"
+	_, err := s.db.Exec(query, input["status"], input["point"], id)
 
 	return err
 }

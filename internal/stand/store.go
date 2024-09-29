@@ -53,9 +53,9 @@ func (s *Store) Update(id int, input map[string]interface{}) error {
 	return err
 }
 
-func (s *Store) UpdateStock(id int, n int) error {
+func (s *Store) UpdateStock(id int, quantity int) error {
 	query := "UPDATE stands SET stock=stock+$1 WHERE id=$2"
-	_, err := s.db.Exec(query, n, id)
+	_, err := s.db.Exec(query, quantity, id)
 
 	return err
 }

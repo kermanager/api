@@ -1,7 +1,7 @@
 package types
 
 const (
-	StandTypeBuyer    string = "BUYER"
+	StandTypeBuyer    string = "CONSUMPTION"
 	StandTypeActivity string = "ACTIVITY"
 )
 
