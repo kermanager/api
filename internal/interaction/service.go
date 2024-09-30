@@ -137,7 +137,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		totalPrice = stand.Price * quantity
 	}
 
-	// decrease stand's stock
+	// check stand's stock and user credit
 	if stand.Type == types.InteractionTypeConsumption {
 		if stand.Stock < quantity {
 			return errors.CustomError{
@@ -145,6 +145,16 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 				Err: goErrors.New("not enough stock"),
 			}
 		}
+		if user.Credit < totalPrice {
+			return errors.CustomError{
+				Key: errors.BadRequest,
+				Err: goErrors.New("not enough credit"),
+			}
+		}
+	}
+
+	// decrease stand's stock
+	if stand.Type == types.InteractionTypeConsumption {
 		err = s.standStore.UpdateStock(standId, -quantity)
 		if err != nil {
 			return errors.CustomError{
@@ -155,12 +165,6 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	}
 
 	// decrease user's credit
-	if user.Credit < totalPrice {
-		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("not enough credit"),
-		}
-	}
 	err = s.userStore.UpdateCredit(userId, -totalPrice)
 	if err != nil {
 		return errors.CustomError{
