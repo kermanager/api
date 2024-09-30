@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	goErrors "errors"
 
+	"github.com/kermanager/internal/kermesse"
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/pkg/errors"
+	"github.com/kermanager/pkg/utils"
 )
 
 type TombolaService interface {
@@ -19,15 +21,18 @@ type TombolaService interface {
 }
 
 type Service struct {
-	store TombolaStore
+	store         TombolaStore
+	kermesseStore kermesse.KermesseStore
 }
 
-func NewService(store TombolaStore) *Service {
+func NewService(store TombolaStore, kermesseStore kermesse.KermesseStore) *Service {
 	return &Service{
-		store: store,
+		store:         store,
+		kermesseStore: kermesseStore,
 	}
 }
 
+// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Tombola, error) {
 	tombolas, err := s.store.FindAll()
 	if err != nil {
@@ -40,6 +45,7 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Tombola, error) {
 	return tombolas, nil
 }
 
+// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Tombola, error) {
 	tombola, err := s.store.FindById(id)
 	if err != nil {
@@ -58,20 +64,16 @@ func (s *Service) Get(ctx context.Context, id int) (types.Tombola, error) {
 	return tombola, nil
 }
 
+// TODO: All users with role manager, and manager of kermesse
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
-	err := s.store.Create(input)
-	if err != nil {
+	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
+	if error != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Key: errors.BadRequest,
+			Err: error,
 		}
 	}
-
-	return nil
-}
-
-func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
-	_, err := s.store.FindById(id)
+	kermesse, err := s.kermesseStore.FindById(kermesseId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -82,6 +84,75 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if kermesse.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
+		}
+	}
+
+	err = s.store.Create(input)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
+}
+
+// TODO: All users with role manager, and manager of kermesse
+func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
+	tombola, err := s.store.FindById(id)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	kermesse, err := s.kermesseStore.FindById(tombola.KermesseId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if kermesse.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
 		}
 	}
 
@@ -96,8 +167,9 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	return nil
 }
 
+// TODO: All users with role manager, and manager of kermesse
 func (s *Service) Start(ctx context.Context, id int) error {
-	_, err := s.store.FindById(id)
+	tombola, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -108,6 +180,34 @@ func (s *Service) Start(ctx context.Context, id int) error {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	kermesse, err := s.kermesseStore.FindById(tombola.KermesseId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if kermesse.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
 		}
 	}
 
@@ -122,6 +222,7 @@ func (s *Service) Start(ctx context.Context, id int) error {
 	return nil
 }
 
+// TODO: All users with role manager, and manager of kermesse
 func (s *Service) End(ctx context.Context, id int) error {
 	tombola, err := s.store.FindById(id)
 	if err != nil {
@@ -134,6 +235,34 @@ func (s *Service) End(ctx context.Context, id int) error {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	kermesse, err := s.kermesseStore.FindById(tombola.KermesseId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if kermesse.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
 		}
 	}
 

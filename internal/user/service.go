@@ -60,6 +60,7 @@ func (s *Service) Get(ctx context.Context, id int) (types.UserBasic, error) {
 	}, nil
 }
 
+// TODO: all users with role parent
 func (s *Service) Invite(ctx context.Context, input map[string]interface{}) error {
 	_, err := s.store.FindByEmail(input["email"].(string))
 	if err == nil {
@@ -112,6 +113,7 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
+// TODO: all users with role parent
 func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
 	childId, err := utils.GetIntFromMap(input, "child_id")
 	if err != nil {
@@ -210,6 +212,13 @@ func (s *Service) SignUp(ctx context.Context, input map[string]interface{}) erro
 	}
 	input["password"] = hashedPassword
 	input["parent_id"] = nil
+
+	if input["role"] == types.UserRoleChild {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("role cannot be child"),
+		}
+	}
 
 	err = s.store.Create(input)
 	if err != nil {

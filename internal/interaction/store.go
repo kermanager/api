@@ -8,6 +8,7 @@ import (
 type InteractionStore interface {
 	FindAll() ([]types.Interaction, error)
 	FindById(id int) (types.Interaction, error)
+	CanCreate(input map[string]interface{}) (bool, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 }
@@ -36,6 +37,21 @@ func (s *Store) FindById(id int) (types.Interaction, error) {
 	err := s.db.Get(&interaction, query, id)
 
 	return interaction, err
+}
+
+func (s *Store) CanCreate(input map[string]interface{}) (bool, error) {
+	var isAssociated bool
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM kermesses_users ku
+  		JOIN kermesses_stands ks ON ku.kermesse_id = ks.kermesse_id
+  		WHERE ku.user_id = $1 AND ks.stand_id = $2
+		) AS is_associated
+ 	`
+	err := s.db.QueryRow(query, input["user_id"], input["stand_id"]).Scan(&isAssociated)
+
+	return isAssociated, err
 }
 
 func (s *Store) Create(input map[string]interface{}) error {

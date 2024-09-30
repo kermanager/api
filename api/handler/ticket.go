@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kermanager/api/middleware"
 	"github.com/kermanager/internal/ticket"
+	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
@@ -27,7 +28,7 @@ func NewTicketHandler(service ticket.TicketService, userStore user.UserStore) *T
 func (h *TicketHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/tickets", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/tickets/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
-	mux.Handle("/tickets", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore))).Methods(http.MethodPost)
+	mux.Handle("/tickets", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleChild))).Methods(http.MethodPost)
 }
 
 func (h *TicketHandler) GetAll(w http.ResponseWriter, r *http.Request) error {

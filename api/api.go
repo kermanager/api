@@ -46,7 +46,7 @@ func (s *APIServer) Start() error {
 	standHandler.RegisterRoutes(router)
 
 	kermesseStore := kermesse.NewStore(s.db)
-	kermesseService := kermesse.NewService(kermesseStore)
+	kermesseService := kermesse.NewService(kermesseStore, userStore)
 	kermesseHandler := handler.NewKermesseHandler(kermesseService, userStore)
 	kermesseHandler.RegisterRoutes(router)
 
@@ -56,7 +56,7 @@ func (s *APIServer) Start() error {
 	interactionHandler.RegisterRoutes(router)
 
 	tombolaStore := tombola.NewStore(s.db)
-	tombolaService := tombola.NewService(tombolaStore)
+	tombolaService := tombola.NewService(tombolaStore, kermesseStore)
 	tombolaHandler := handler.NewTombolaHandler(tombolaService, userStore)
 	tombolaHandler.RegisterRoutes(router)
 

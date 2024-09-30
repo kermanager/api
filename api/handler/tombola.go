@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kermanager/api/middleware"
 	"github.com/kermanager/internal/tombola"
+	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
@@ -27,10 +28,10 @@ func NewTombolaHandler(service tombola.TombolaService, userStore user.UserStore)
 func (h *TombolaHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/tombolas", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/tombolas/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
-	mux.Handle("/tombolas", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore))).Methods(http.MethodPost)
-	mux.Handle("/tombolas/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore))).Methods(http.MethodPatch)
-	mux.Handle("/tombolas/{id}/start", errors.ErrorHandler(middleware.IsAuth(h.Start, h.userStore))).Methods(http.MethodPatch)
-	mux.Handle("/tombolas/{id}/end", errors.ErrorHandler(middleware.IsAuth(h.End, h.userStore))).Methods(http.MethodPatch)
+	mux.Handle("/tombolas", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
+	mux.Handle("/tombolas/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
+	mux.Handle("/tombolas/{id}/start", errors.ErrorHandler(middleware.IsAuth(h.Start, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
+	mux.Handle("/tombolas/{id}/end", errors.ErrorHandler(middleware.IsAuth(h.End, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 }
 
 func (h *TombolaHandler) GetAll(w http.ResponseWriter, r *http.Request) error {

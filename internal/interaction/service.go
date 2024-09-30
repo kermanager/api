@@ -33,6 +33,7 @@ func NewService(store InteractionStore, standStore stand.StandStore, userStore u
 	}
 }
 
+// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Interaction, error) {
 	interactions, err := s.store.FindAll()
 	if err != nil {
@@ -45,6 +46,7 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Interaction, error) {
 	return interactions, nil
 }
 
+// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Interaction, error) {
 	interaction, err := s.store.FindById(id)
 	if err != nil {
@@ -63,6 +65,7 @@ func (s *Service) Get(ctx context.Context, id int) (types.Interaction, error) {
 	return interaction, nil
 }
 
+// TODO: All users with role child or parent
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	standId, err := utils.GetIntFromMap(input, "stand_id")
 	if err != nil {
@@ -103,6 +106,23 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	canCreate, err := s.store.CanCreate(map[string]interface{}{
+		"user_id":  userId,
+		"stand_id": standId,
+	})
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+	if !canCreate {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
 		}
 	}
 
@@ -161,7 +181,9 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		}
 	}
 
+	input["user_id"] = user.Id
 	input["type"] = stand.Type
+
 	err = s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
@@ -173,6 +195,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
+// TODO: all users with role stand_holder, manager of stand
 func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
 	interaction, err := s.store.FindById(id)
 	if err != nil {
@@ -192,6 +215,34 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		return errors.CustomError{
 			Key: errors.BadRequest,
 			Err: goErrors.New("interaction type is not activity"),
+		}
+	}
+
+	stand, err := s.standStore.FindById(interaction.StandId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if stand.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
 		}
 	}
 

@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kermanager/api/middleware"
 	"github.com/kermanager/internal/kermesse"
+	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
@@ -27,11 +28,11 @@ func NewKermesseHandler(service kermesse.KermesseService, userStore user.UserSto
 func (h *KermesseHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/kermesses", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/kermesses/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
-	mux.Handle("/kermesses", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore))).Methods(http.MethodPost)
-	mux.Handle("/kermesses/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore))).Methods(http.MethodPatch)
+	mux.Handle("/kermesses", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
+	mux.Handle("/kermesses/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 
-	mux.Handle("/kermesses/{id}/users", errors.ErrorHandler(middleware.IsAuth(h.AddUser, h.userStore))).Methods(http.MethodPost)
-	mux.Handle("/kermesses/{id}/stands", errors.ErrorHandler(middleware.IsAuth(h.AddStand, h.userStore))).Methods(http.MethodPost)
+	mux.Handle("/kermesses/{id}/users", errors.ErrorHandler(middleware.IsAuth(h.AddUser, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
+	mux.Handle("/kermesses/{id}/stands", errors.ErrorHandler(middleware.IsAuth(h.AddStand, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
 }
 
 func (h *KermesseHandler) GetAll(w http.ResponseWriter, r *http.Request) error {

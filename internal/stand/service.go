@@ -26,6 +26,7 @@ func NewService(store StandStore) *Service {
 	}
 }
 
+// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Stand, error) {
 	stands, err := s.store.FindAll()
 	if err != nil {
@@ -38,6 +39,7 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Stand, error) {
 	return stands, nil
 }
 
+// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Stand, error) {
 	stand, err := s.store.FindById(id)
 	if err != nil {
@@ -56,6 +58,7 @@ func (s *Service) Get(ctx context.Context, id int) (types.Stand, error) {
 	return stand, nil
 }
 
+// TODO: All users with role stand_holder
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
@@ -77,8 +80,9 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
+// TODO: All users with role stand_holder, and the holder of the stand
 func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
-	_, err := s.store.FindById(id)
+	stand, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -89,6 +93,20 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if stand.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("user is not the holder of the stand"),
 		}
 	}
 

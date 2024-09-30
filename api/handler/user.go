@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/kermanager/api/middleware"
+	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
@@ -25,8 +26,8 @@ func NewUserHandler(service user.UserService, store user.UserStore) *UserHandler
 
 func (h *UserHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/users/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.store))).Methods(http.MethodGet)
-	mux.Handle("/users/invite", errors.ErrorHandler(middleware.IsAuth(h.Invite, h.store))).Methods(http.MethodPost)
-	mux.Handle("/users/pay", errors.ErrorHandler(middleware.IsAuth(h.Pay, h.store))).Methods(http.MethodPatch)
+	mux.Handle("/users/invite", errors.ErrorHandler(middleware.IsAuth(h.Invite, h.store, types.UserRoleParent))).Methods(http.MethodPost)
+	mux.Handle("/users/pay", errors.ErrorHandler(middleware.IsAuth(h.Pay, h.store, types.UserRoleParent))).Methods(http.MethodPatch)
 
 	mux.Handle("/sign-up", errors.ErrorHandler(h.SignUp)).Methods(http.MethodPost)
 	mux.Handle("/sign-in", errors.ErrorHandler(h.SignIn)).Methods(http.MethodPost)

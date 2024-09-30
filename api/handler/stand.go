@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kermanager/api/middleware"
 	"github.com/kermanager/internal/stand"
+	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
@@ -27,8 +28,8 @@ func NewStandHandler(service stand.StandService, userStore user.UserStore) *Stan
 func (h *StandHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/stands", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/stands/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
-	mux.Handle("/stands", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore))).Methods(http.MethodPost)
-	mux.Handle("/stands/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore))).Methods(http.MethodPatch)
+	mux.Handle("/stands", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodPost)
+	mux.Handle("/stands/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodPatch)
 }
 
 func (h *StandHandler) GetAll(w http.ResponseWriter, r *http.Request) error {

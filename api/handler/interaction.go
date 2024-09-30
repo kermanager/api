@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kermanager/api/middleware"
 	"github.com/kermanager/internal/interaction"
+	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
@@ -27,8 +28,8 @@ func NewInteractionHandler(service interaction.InteractionService, userStore use
 func (h *InteractionHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/interactions", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/interactions/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
-	mux.Handle("/interactions", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore))).Methods(http.MethodPost)
-	mux.Handle("/interactions/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore))).Methods(http.MethodPatch)
+	mux.Handle("/interactions", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleParent, types.UserRoleChild))).Methods(http.MethodPost)
+	mux.Handle("/interactions/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodPatch)
 }
 
 func (h *InteractionHandler) GetAll(w http.ResponseWriter, r *http.Request) error {

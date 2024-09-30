@@ -13,7 +13,7 @@ import (
 	"github.com/kermanager/pkg/jwt"
 )
 
-func IsAuth(handlerFunc errors.ErrorHandler, store user.UserStore) errors.ErrorHandler {
+func IsAuth(handlerFunc errors.ErrorHandler, store user.UserStore, roles ...string) errors.ErrorHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		token := r.Header.Get("Authorization")
 		if token == "" {
@@ -42,6 +42,22 @@ func IsAuth(handlerFunc errors.ErrorHandler, store user.UserStore) errors.ErrorH
 		user, err := store.FindById(userId)
 		if err != nil {
 			return err
+		}
+
+		if len(roles) > 0 {
+			roleAllowed := false
+			for _, role := range roles {
+				if user.Role == role {
+					roleAllowed = true
+					break
+				}
+			}
+			if !roleAllowed {
+				return errors.CustomError{
+					Key: errors.Forbidden,
+					Err: goErrors.New("user does not have the required role"),
+				}
+			}
 		}
 
 		ctx := r.Context()

@@ -9,6 +9,7 @@ type TicketStore interface {
 	FindAll() ([]types.Ticket, error)
 	FindById(id int) (types.Ticket, error)
 	Create(input map[string]interface{}) error
+	CanCreate(input map[string]interface{}) (bool, error)
 }
 
 type Store struct {
@@ -35,6 +36,14 @@ func (s *Store) FindById(id int) (types.Ticket, error) {
 	err := s.db.Get(&ticket, query, id)
 
 	return ticket, err
+}
+
+func (s *Store) CanCreate(input map[string]interface{}) (bool, error) {
+	var isAssociated bool
+	query := "SELECT EXISTS ( SELECT 1 FROM kermesses_users WHERE kermesse_id = $1 AND user_id = $2 ) AS is_associated"
+	err := s.db.QueryRow(query, input["kermesse_id"], input["user_id"]).Scan(&isAssociated)
+
+	return isAssociated, err
 }
 
 func (s *Store) Create(input map[string]interface{}) error {
