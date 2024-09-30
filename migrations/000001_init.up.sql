@@ -18,7 +18,7 @@ CREATE TYPE stands_type_enum AS ENUM ('CONSUMPTION', 'ACTIVITY');
 
 CREATE TABLE "stands" (
   "id" SERIAL PRIMARY KEY,
-  "user_id" INTEGER NOT NULL REFERENCES "users"("id"), -- stand holder
+  "user_id" INTEGER NOT NULL UNIQUE REFERENCES "users"("id"), -- stand holder
   "name" VARCHAR(255) NOT NULL,
   "description" TEXT DEFAULT '',
   "type" stands_type_enum NOT NULL,

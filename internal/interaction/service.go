@@ -85,11 +85,11 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		}
 	}
 
-	userId, err := utils.GetIntFromMap(input, "user_id")
-	if err != nil {
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: err,
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
 		}
 	}
 	user, err := s.userStore.FindById(userId)
