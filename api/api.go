@@ -61,7 +61,7 @@ func (s *APIServer) Start() error {
 	tombolaHandler.RegisterRoutes(router)
 
 	ticketStore := ticket.NewStore(s.db)
-	ticketService := ticket.NewService(ticketStore, tombolaStore)
+	ticketService := ticket.NewService(ticketStore, tombolaStore, userStore)
 	ticketHandler := handler.NewTicketHandler(ticketService, userStore)
 	ticketHandler.RegisterRoutes(router)
 

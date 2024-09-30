@@ -7,6 +7,7 @@ import (
 
 	"github.com/kermanager/internal/tombola"
 	"github.com/kermanager/internal/types"
+	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/utils"
 )
@@ -20,12 +21,14 @@ type TicketService interface {
 type Service struct {
 	store        TicketStore
 	tombolaStore tombola.TombolaStore
+	userStore    user.UserStore
 }
 
-func NewService(store TicketStore, tombolaStore tombola.TombolaStore) *Service {
+func NewService(store TicketStore, tombolaStore tombola.TombolaStore, userStore user.UserStore) *Service {
 	return &Service{
 		store:        store,
 		tombolaStore: tombolaStore,
+		userStore:    userStore,
 	}
 }
 
@@ -95,11 +98,32 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 			Err: goErrors.New("user id not found in context"),
 		}
 	}
-	input["user_id"] = userId
+	user, err := s.userStore.FindById(userId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
 
+	// check if user has enough credit
+	if user.Credit < tombola.Price {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("not enough credit"),
+		}
+	}
+
+	// check if user belongs to the kermesse
 	canCreate, err := s.store.CanCreate(map[string]interface{}{
-		"tombola_id": tombolaId,
-		"user_id":    userId,
+		"kermesse_id": tombola.KermesseId,
+		"user_id":     userId,
 	})
 	if err != nil {
 		return errors.CustomError{
@@ -113,6 +137,17 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 			Err: goErrors.New("forbidden"),
 		}
 	}
+
+	// decrease user's credit
+	err = s.userStore.UpdateCredit(userId, -tombola.Price)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	input["user_id"] = userId
 
 	err = s.store.Create(input)
 	if err != nil {
