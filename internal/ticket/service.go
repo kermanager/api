@@ -29,7 +29,6 @@ func NewService(store TicketStore, tombolaStore tombola.TombolaStore) *Service {
 	}
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Ticket, error) {
 	tickets, err := s.store.FindAll()
 	if err != nil {
@@ -42,7 +41,6 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Ticket, error) {
 	return tickets, nil
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Ticket, error) {
 	ticket, err := s.store.FindById(id)
 	if err != nil {
@@ -61,7 +59,6 @@ func (s *Service) Get(ctx context.Context, id int) (types.Ticket, error) {
 	return ticket, nil
 }
 
-// TODO: all users with role child
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	tombolaId, err := utils.GetIntFromMap(input, "tombola_id")
 	if err != nil {

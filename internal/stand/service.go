@@ -26,7 +26,6 @@ func NewService(store StandStore) *Service {
 	}
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Stand, error) {
 	stands, err := s.store.FindAll()
 	if err != nil {
@@ -39,7 +38,6 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Stand, error) {
 	return stands, nil
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Stand, error) {
 	stand, err := s.store.FindById(id)
 	if err != nil {
@@ -58,7 +56,6 @@ func (s *Service) Get(ctx context.Context, id int) (types.Stand, error) {
 	return stand, nil
 }
 
-// TODO: All users with role stand_holder
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
@@ -80,7 +77,6 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-// TODO: All users with role stand_holder, and the holder of the stand
 func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
 	stand, err := s.store.FindById(id)
 	if err != nil {

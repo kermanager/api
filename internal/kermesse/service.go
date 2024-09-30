@@ -33,7 +33,6 @@ func NewService(store KermesseStore, userStore user.UserStore) *Service {
 	}
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Kermesse, error) {
 	kermesses, err := s.store.FindAll()
 	if err != nil {
@@ -46,7 +45,6 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Kermesse, error) {
 	return kermesses, nil
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Kermesse, error) {
 	kermesse, err := s.store.FindById(id)
 	if err != nil {
@@ -65,7 +63,6 @@ func (s *Service) Get(ctx context.Context, id int) (types.Kermesse, error) {
 	return kermesse, nil
 }
 
-// TODO: All users with role manager
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
@@ -87,7 +84,6 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-// TODO: All users with role manager, and the manager of the kermesse
 func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
 	kermesse, err := s.store.FindById(id)
 	if err != nil {
@@ -128,7 +124,6 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	return nil
 }
 
-// TODO: All users with role manager, and the manager of the kermesse
 func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) error {
 	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
 	if error != nil {
@@ -215,7 +210,6 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 	return nil
 }
 
-// TODO: All users with role manager, and the manager of the kermesse
 func (s *Service) AddStand(ctx context.Context, input map[string]interface{}) error {
 	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
 	if error != nil {

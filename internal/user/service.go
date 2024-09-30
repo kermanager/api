@@ -60,7 +60,6 @@ func (s *Service) Get(ctx context.Context, id int) (types.UserBasic, error) {
 	}, nil
 }
 
-// TODO: all users with role parent
 func (s *Service) Invite(ctx context.Context, input map[string]interface{}) error {
 	_, err := s.store.FindByEmail(input["email"].(string))
 	if err == nil {
@@ -113,7 +112,6 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-// TODO: all users with role parent
 func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
 	childId, err := utils.GetIntFromMap(input, "child_id")
 	if err != nil {

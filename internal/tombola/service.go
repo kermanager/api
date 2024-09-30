@@ -32,7 +32,6 @@ func NewService(store TombolaStore, kermesseStore kermesse.KermesseStore) *Servi
 	}
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Tombola, error) {
 	tombolas, err := s.store.FindAll()
 	if err != nil {
@@ -45,7 +44,6 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Tombola, error) {
 	return tombolas, nil
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Tombola, error) {
 	tombola, err := s.store.FindById(id)
 	if err != nil {
@@ -64,7 +62,6 @@ func (s *Service) Get(ctx context.Context, id int) (types.Tombola, error) {
 	return tombola, nil
 }
 
-// TODO: All users with role manager, and manager of kermesse
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
 	if error != nil {
@@ -112,7 +109,6 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-// TODO: All users with role manager, and manager of kermesse
 func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
 	tombola, err := s.store.FindById(id)
 	if err != nil {
@@ -167,7 +163,6 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	return nil
 }
 
-// TODO: All users with role manager, and manager of kermesse
 func (s *Service) Start(ctx context.Context, id int) error {
 	tombola, err := s.store.FindById(id)
 	if err != nil {
@@ -222,7 +217,6 @@ func (s *Service) Start(ctx context.Context, id int) error {
 	return nil
 }
 
-// TODO: All users with role manager, and manager of kermesse
 func (s *Service) End(ctx context.Context, id int) error {
 	tombola, err := s.store.FindById(id)
 	if err != nil {

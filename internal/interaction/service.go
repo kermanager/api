@@ -33,7 +33,6 @@ func NewService(store InteractionStore, standStore stand.StandStore, userStore u
 	}
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) GetAll(ctx context.Context) ([]types.Interaction, error) {
 	interactions, err := s.store.FindAll()
 	if err != nil {
@@ -46,7 +45,6 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Interaction, error) {
 	return interactions, nil
 }
 
-// TODO: Permissions not decided yet
 func (s *Service) Get(ctx context.Context, id int) (types.Interaction, error) {
 	interaction, err := s.store.FindById(id)
 	if err != nil {
@@ -65,7 +63,6 @@ func (s *Service) Get(ctx context.Context, id int) (types.Interaction, error) {
 	return interaction, nil
 }
 
-// TODO: All users with role child or parent
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
 	standId, err := utils.GetIntFromMap(input, "stand_id")
 	if err != nil {
@@ -126,15 +123,22 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		}
 	}
 
+	// calculate total price
+	quantity := 1
+	totalPrice := stand.Price
 	if stand.Type == types.InteractionTypeConsumption {
-		quantity, err := utils.GetIntFromMap(input, "quantity")
+		quantity, err = utils.GetIntFromMap(input, "quantity")
 		if err != nil {
 			return errors.CustomError{
 				Key: errors.BadRequest,
 				Err: err,
 			}
 		}
-		// decrease stand's stock
+		totalPrice = stand.Price * quantity
+	}
+
+	// decrease stand's stock
+	if stand.Type == types.InteractionTypeConsumption {
 		if stand.Stock < quantity {
 			return errors.CustomError{
 				Key: errors.BadRequest,
@@ -148,41 +152,35 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 				Err: err,
 			}
 		}
-		// decrease user's credit
-		totalPrice := stand.Price * quantity
-		if user.Credit < totalPrice {
-			return errors.CustomError{
-				Key: errors.BadRequest,
-				Err: goErrors.New("not enough credit"),
-			}
+	}
+
+	// decrease user's credit
+	if user.Credit < totalPrice {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("not enough credit"),
 		}
-		err = s.userStore.UpdateCredit(userId, -totalPrice)
-		if err != nil {
-			return errors.CustomError{
-				Key: errors.InternalServerError,
-				Err: err,
-			}
+	}
+	err = s.userStore.UpdateCredit(userId, -totalPrice)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
 		}
-	} else {
-		// decrease user's credit
-		totalPrice := stand.Price
-		if user.Credit < totalPrice {
-			return errors.CustomError{
-				Key: errors.BadRequest,
-				Err: goErrors.New("not enough credit"),
-			}
-		}
-		err = s.userStore.UpdateCredit(userId, -totalPrice)
-		if err != nil {
-			return errors.CustomError{
-				Key: errors.InternalServerError,
-				Err: err,
-			}
+	}
+
+	// increase stand holder's credit
+	err = s.userStore.UpdateCredit(stand.UserId, totalPrice)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
 		}
 	}
 
 	input["user_id"] = user.Id
 	input["type"] = stand.Type
+	input["credit"] = totalPrice
 
 	err = s.store.Create(input)
 	if err != nil {
@@ -195,7 +193,6 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-// TODO: all users with role stand_holder, manager of stand
 func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
 	interaction, err := s.store.FindById(id)
 	if err != nil {
