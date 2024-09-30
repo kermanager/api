@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	goErrors "errors"
 
+	"github.com/kermanager/internal/kermesse"
 	"github.com/kermanager/internal/stand"
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
@@ -20,16 +21,18 @@ type InteractionService interface {
 }
 
 type Service struct {
-	store      InteractionStore
-	standStore stand.StandStore
-	userStore  user.UserStore
+	store         InteractionStore
+	standStore    stand.StandStore
+	userStore     user.UserStore
+	kermesseStore kermesse.KermesseStore
 }
 
-func NewService(store InteractionStore, standStore stand.StandStore, userStore user.UserStore) *Service {
+func NewService(store InteractionStore, standStore stand.StandStore, userStore user.UserStore, kermesseStore kermesse.KermesseStore) *Service {
 	return &Service{
-		store:      store,
-		standStore: standStore,
-		userStore:  userStore,
+		store:         store,
+		standStore:    standStore,
+		userStore:     userStore,
+		kermesseStore: kermesseStore,
 	}
 }
 
@@ -216,6 +219,26 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		return errors.CustomError{
 			Key: errors.BadRequest,
 			Err: goErrors.New("interaction type is not activity"),
+		}
+	}
+
+	kermesse, err := s.kermesseStore.FindById(interaction.KermesseId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is ended"),
 		}
 	}
 

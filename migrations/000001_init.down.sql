@@ -12,5 +12,6 @@ DROP TABLE IF EXISTS "users";
 DROP TYPE IF EXISTS tombolas_status_enum;
 DROP TYPE IF EXISTS interactions_type_enum;
 DROP TYPE IF EXISTS interactions_status_enum;
+DROP TYPE IF EXISTS kermesses_status_enum;
 DROP TYPE IF EXISTS stands_type_enum;
 DROP TYPE IF EXISTS users_role_enum;

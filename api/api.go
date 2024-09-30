@@ -51,7 +51,7 @@ func (s *APIServer) Start() error {
 	kermesseHandler.RegisterRoutes(router)
 
 	interactionStore := interaction.NewStore(s.db)
-	interactionService := interaction.NewService(interactionStore, standStore, userStore)
+	interactionService := interaction.NewService(interactionStore, standStore, userStore, kermesseStore)
 	interactionHandler := handler.NewInteractionHandler(interactionService, userStore)
 	interactionHandler.RegisterRoutes(router)
 

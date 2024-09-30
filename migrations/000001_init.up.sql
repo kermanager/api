@@ -28,11 +28,14 @@ CREATE TABLE "stands" (
 
 --- Table: kermesses
 
+CREATE TYPE kermesses_status_enum AS ENUM ('STARTED', 'ENDED');
+
 CREATE TABLE "kermesses" (
   "id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL REFERENCES "users"("id"), -- manager
   "name" VARCHAR(255) NOT NULL,
-  "description" TEXT DEFAULT ''
+  "description" TEXT DEFAULT '',
+  "status" kermesses_status_enum NOT NULL DEFAULT 'STARTED'
 );
 
 CREATE TABLE "kermesses_users" (

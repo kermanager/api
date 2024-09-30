@@ -46,10 +46,11 @@ func (s *Store) CanCreate(input map[string]interface{}) (bool, error) {
 			SELECT 1
 			FROM kermesses_users ku
   		JOIN kermesses_stands ks ON ku.kermesse_id = ks.kermesse_id
-  		WHERE ku.user_id = $1 AND ks.stand_id = $2
+			JOIN kermesses k ON ku.kermesse_id = k.id
+  		WHERE ku.user_id = $1 AND ks.stand_id = $2 AND k.status = $3
 		) AS is_associated
  	`
-	err := s.db.QueryRow(query, input["user_id"], input["stand_id"]).Scan(&isAssociated)
+	err := s.db.QueryRow(query, input["user_id"], input["stand_id"], types.KermesseStatusStarted).Scan(&isAssociated)
 
 	return isAssociated, err
 }

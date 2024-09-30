@@ -10,6 +10,8 @@ type KermesseStore interface {
 	FindById(id int) (types.Kermesse, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
+	End(id int) error
+	CantEnd(id int) (bool, error)
 
 	AddUser(input map[string]interface{}) error
 	AddStand(input map[string]interface{}) error
@@ -51,6 +53,21 @@ func (s *Store) Create(input map[string]interface{}) error {
 func (s *Store) Update(id int, input map[string]interface{}) error {
 	query := "UPDATE kermesses SET name=$1, description=$2 WHERE id=$3"
 	_, err := s.db.Exec(query, input["name"], input["description"], id)
+
+	return err
+}
+
+func (s *Store) CantEnd(id int) (bool, error) {
+	var isTrue bool
+	query := "SELECT EXISTS ( SELECT 1 FROM tombolas WHERE kermesse_id = $1 AND status = $2 ) AS is_true"
+	err := s.db.QueryRow(query, id, types.TombolaStatusStarted).Scan(&isTrue)
+
+	return isTrue, err
+}
+
+func (s *Store) End(id int) error {
+	query := "UPDATE kermesses SET status=$1 WHERE id=$2"
+	_, err := s.db.Exec(query, types.KermesseStatusEnded, id)
 
 	return err
 }

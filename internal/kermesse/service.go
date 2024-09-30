@@ -16,6 +16,7 @@ type KermesseService interface {
 	Get(ctx context.Context, id int) (types.Kermesse, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
+	End(ctx context.Context, id int) error
 
 	AddUser(ctx context.Context, input map[string]interface{}) error
 	AddStand(ctx context.Context, input map[string]interface{}) error
@@ -99,6 +100,13 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		}
 	}
 
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is already ended"),
+		}
+	}
+
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
@@ -124,15 +132,8 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	return nil
 }
 
-func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) error {
-	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
-	if error != nil {
-		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: error,
-		}
-	}
-	kermesse, err := s.store.FindById(kermesseId)
+func (s *Service) End(ctx context.Context, id int) error {
+	kermesse, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -143,6 +144,74 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is already ended"),
+		}
+	}
+
+	cantEnd, err := s.store.CantEnd(id)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+	if cantEnd {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse can't be ended"),
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if kermesse.UserId != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
+		}
+	}
+
+	err = s.store.End(id)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) error {
+	kermesse, err := s.store.FindById(input["kermesse_id"].(int))
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is already ended"),
 		}
 	}
 
@@ -211,14 +280,7 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 }
 
 func (s *Service) AddStand(ctx context.Context, input map[string]interface{}) error {
-	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
-	if error != nil {
-		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: error,
-		}
-	}
-	kermesse, err := s.store.FindById(kermesseId)
+	kermesse, err := s.store.FindById(input["kermesse_id"].(int))
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -229,6 +291,13 @@ func (s *Service) AddStand(ctx context.Context, input map[string]interface{}) er
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is already ended"),
 		}
 	}
 

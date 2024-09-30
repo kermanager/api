@@ -40,8 +40,15 @@ func (s *Store) FindById(id int) (types.Ticket, error) {
 
 func (s *Store) CanCreate(input map[string]interface{}) (bool, error) {
 	var isAssociated bool
-	query := "SELECT EXISTS ( SELECT 1 FROM kermesses_users WHERE kermesse_id = $1 AND user_id = $2 ) AS is_associated"
-	err := s.db.QueryRow(query, input["kermesse_id"], input["user_id"]).Scan(&isAssociated)
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM kermesses_users ku
+			JOIN kermesses k ON k.id = ku.kermesse_id
+			WHERE ku.kermesse_id = $1 AND ku.user_id = $2 AND k.status = $3
+		) AS is_associated
+	`
+	err := s.db.QueryRow(query, input["kermesse_id"], input["user_id"], types.KermesseStatusStarted).Scan(&isAssociated)
 
 	return isAssociated, err
 }

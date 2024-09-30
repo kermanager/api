@@ -84,6 +84,13 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		}
 	}
 
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is ended"),
+		}
+	}
+
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
@@ -135,6 +142,13 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is ended"),
 		}
 	}
 
@@ -192,6 +206,13 @@ func (s *Service) Start(ctx context.Context, id int) error {
 		}
 	}
 
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is ended"),
+		}
+	}
+
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
@@ -243,6 +264,13 @@ func (s *Service) End(ctx context.Context, id int) error {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
+		}
+	}
+
+	if kermesse.Status == types.KermesseStatusEnded {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("kermesse is ended"),
 		}
 	}
 
