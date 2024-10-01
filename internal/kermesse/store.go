@@ -14,7 +14,7 @@ type KermesseStore interface {
 	CanEnd(id int) (bool, error)
 
 	AddUser(input map[string]interface{}) error
-	CanAddStand(id int, standId int) (bool, error)
+	CanAddStand(standId int) (bool, error)
 	AddStand(input map[string]interface{}) error
 }
 
@@ -80,17 +80,17 @@ func (s *Store) AddUser(input map[string]interface{}) error {
 	return err
 }
 
-func (s *Store) CanAddStand(id int, standId int) (bool, error) {
+func (s *Store) CanAddStand(standId int) (bool, error) {
 	var isTrue bool
 	query := `
 		SELECT EXISTS (
 			SELECT 1
 			FROM kermesses_stands ks
   		JOIN kermesses k ON ks.kermesse_id = k.id
-  		WHERE ks.kermesse_id = $1 AND ks.stand_id = $2 AND k.status = $3
+  		WHERE ks.stand_id = $1 AND k.status = $2
 		) AS is_associated
  	`
-	err := s.db.QueryRow(query, id, standId, types.KermesseStatusStarted).Scan(&isTrue)
+	err := s.db.QueryRow(query, standId, types.KermesseStatusStarted).Scan(&isTrue)
 
 	return !isTrue, err
 }

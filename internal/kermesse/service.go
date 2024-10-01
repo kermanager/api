@@ -308,7 +308,7 @@ func (s *Service) AddStand(ctx context.Context, input map[string]interface{}) er
 			Err: err,
 		}
 	}
-	canAddStand, err := s.store.CanAddStand(kermesse.Id, standId)
+	canAddStand, err := s.store.CanAddStand(standId)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
