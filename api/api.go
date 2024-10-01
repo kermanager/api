@@ -13,6 +13,7 @@ import (
 	"github.com/kermanager/internal/ticket"
 	"github.com/kermanager/internal/tombola"
 	"github.com/kermanager/internal/user"
+	"github.com/rs/cors"
 )
 
 type APIServer struct {
@@ -65,6 +66,14 @@ func (s *APIServer) Start() error {
 	ticketHandler := handler.NewTicketHandler(ticketService, userStore)
 	ticketHandler.RegisterRoutes(router)
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
+	r := c.Handler(router)
+
 	log.Printf("Starting server on %s", s.address)
-	return http.ListenAndServe(s.address, router)
+	return http.ListenAndServe(s.address, r)
 }
