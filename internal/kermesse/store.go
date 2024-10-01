@@ -11,9 +11,10 @@ type KermesseStore interface {
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 	End(id int) error
-	CantEnd(id int) (bool, error)
+	CanEnd(id int) (bool, error)
 
 	AddUser(input map[string]interface{}) error
+	CanAddStand(id int, standId int) (bool, error)
 	AddStand(input map[string]interface{}) error
 }
 
@@ -57,12 +58,12 @@ func (s *Store) Update(id int, input map[string]interface{}) error {
 	return err
 }
 
-func (s *Store) CantEnd(id int) (bool, error) {
+func (s *Store) CanEnd(id int) (bool, error) {
 	var isTrue bool
 	query := "SELECT EXISTS ( SELECT 1 FROM tombolas WHERE kermesse_id = $1 AND status = $2 ) AS is_true"
 	err := s.db.QueryRow(query, id, types.TombolaStatusStarted).Scan(&isTrue)
 
-	return isTrue, err
+	return !isTrue, err
 }
 
 func (s *Store) End(id int) error {
@@ -77,6 +78,21 @@ func (s *Store) AddUser(input map[string]interface{}) error {
 	_, err := s.db.Exec(query, input["kermesse_id"], input["user_id"])
 
 	return err
+}
+
+func (s *Store) CanAddStand(id int, standId int) (bool, error) {
+	var isTrue bool
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM kermesses_stands ks
+  		JOIN kermesses k ON ks.kermesse_id = k.id
+  		WHERE ks.kermesse_id = $1 AND ks.stand_id = $2 AND k.status = $3
+		) AS is_associated
+ 	`
+	err := s.db.QueryRow(query, id, standId, types.KermesseStatusStarted).Scan(&isTrue)
+
+	return !isTrue, err
 }
 
 func (s *Store) AddStand(input map[string]interface{}) error {

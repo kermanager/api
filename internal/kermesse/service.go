@@ -154,14 +154,14 @@ func (s *Service) End(ctx context.Context, id int) error {
 		}
 	}
 
-	cantEnd, err := s.store.CantEnd(id)
+	canEnd, err := s.store.CanEnd(id)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
 		}
 	}
-	if cantEnd {
+	if !canEnd {
 		return errors.CustomError{
 			Key: errors.BadRequest,
 			Err: goErrors.New("kermesse can't be ended"),
@@ -298,6 +298,27 @@ func (s *Service) AddStand(ctx context.Context, input map[string]interface{}) er
 		return errors.CustomError{
 			Key: errors.BadRequest,
 			Err: goErrors.New("kermesse is already ended"),
+		}
+	}
+
+	standId, err := utils.GetIntFromMap(input, "stand_id")
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: err,
+		}
+	}
+	canAddStand, err := s.store.CanAddStand(kermesse.Id, standId)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+	if !canAddStand {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("stand is already associated with kermesse"),
 		}
 	}
 
