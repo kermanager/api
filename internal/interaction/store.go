@@ -8,7 +8,7 @@ import (
 )
 
 type InteractionStore interface {
-	FindAll(filters map[string]interface{}) ([]types.Interaction, error)
+	FindAll(filters map[string]interface{}) ([]types.InteractionBasic, error)
 	FindById(id int) (types.Interaction, error)
 	CanCreate(input map[string]interface{}) (bool, error)
 	Create(input map[string]interface{}) error
@@ -25,8 +25,8 @@ func NewStore(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) FindAll(filters map[string]interface{}) ([]types.Interaction, error) {
-	interactions := []types.Interaction{}
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.InteractionBasic, error) {
+	interactions := []types.InteractionBasic{}
 	query := `
 		SELECT DISTINCT
 			i.id AS id,
@@ -39,14 +39,14 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.Interaction, er
 			u.name AS "user.name",
 			u.email AS "user.email",
 			u.role AS "user.role",
-			s.id AS "user.id",
-			s.name AS "user.name",
-			s.description AS "user.description",
-			s.type AS "user.type",
-			s.price AS "user.price"
+			s.id AS "stand.id",
+			s.name AS "stand.name",
+			s.description AS "stand.description",
+			s.type AS "stand.type",
+			s.price AS "stand.price"
 		FROM interactions i
-		FULL OUTER JOIN users u ON i.user_id = u.id
-		FULL OUTER JOIN stands s ON i.stand_id = s.id
+		JOIN users u ON i.user_id = u.id
+		JOIN stands s ON i.stand_id = s.id
 		WHERE 1=1
 	`
 	if filters["kermesse_id"] != nil {

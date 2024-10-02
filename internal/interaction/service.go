@@ -14,7 +14,7 @@ import (
 )
 
 type InteractionService interface {
-	GetAll(ctx context.Context, params map[string]interface{}) ([]types.Interaction, error)
+	GetAll(ctx context.Context, params map[string]interface{}) ([]types.InteractionBasic, error)
 	Get(ctx context.Context, id int) (types.Interaction, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
@@ -36,7 +36,7 @@ func NewService(store InteractionStore, standStore stand.StandStore, userStore u
 	}
 }
 
-func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.Interaction, error) {
+func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.InteractionBasic, error) {
 	filters := map[string]interface{}{}
 	if params["kermesse_id"] != nil {
 		filters["kermesse_id"] = params["kermesse_id"]
