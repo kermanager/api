@@ -1,7 +1,6 @@
 package types
 
 const (
-	TombolaStatusCreated = "CREATED"
 	TombolaStatusStarted = "STARTED"
 	TombolaStatusEnded   = "ENDED"
 )

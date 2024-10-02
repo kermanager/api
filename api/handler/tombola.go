@@ -31,7 +31,6 @@ func (h *TombolaHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/tombolas/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/tombolas", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
 	mux.Handle("/tombolas/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
-	mux.Handle("/tombolas/{id}/start", errors.ErrorHandler(middleware.IsAuth(h.Start, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 	mux.Handle("/tombolas/{id}/end", errors.ErrorHandler(middleware.IsAuth(h.End, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 }
 
@@ -118,30 +117,6 @@ func (h *TombolaHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if err := h.service.Update(r.Context(), id, input); err != nil {
-		return err
-	}
-
-	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	return nil
-}
-
-func (h *TombolaHandler) Start(w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	if err := h.service.Start(r.Context(), id); err != nil {
 		return err
 	}
 

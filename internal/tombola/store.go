@@ -12,7 +12,6 @@ type TombolaStore interface {
 	FindById(id int) (types.Tombola, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
-	UpdateStatus(id int, status string) error
 	SetWinner(id int) error
 }
 
@@ -64,13 +63,6 @@ func (s *Store) Create(input map[string]interface{}) error {
 func (s *Store) Update(id int, input map[string]interface{}) error {
 	query := "UPDATE tombolas SET name=$1, price=$2, gift=$3 WHERE id=$4"
 	_, err := s.db.Exec(query, input["name"], input["price"], input["gift"], id)
-
-	return err
-}
-
-func (s *Store) UpdateStatus(id int, status string) error {
-	query := "UPDATE tombolas SET status=$1 WHERE id=$2"
-	_, err := s.db.Exec(query, status, id)
 
 	return err
 }

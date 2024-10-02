@@ -16,7 +16,6 @@ type TombolaService interface {
 	Get(ctx context.Context, id int) (types.Tombola, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
-	Start(ctx context.Context, id int) error
 	End(ctx context.Context, id int) error
 }
 
@@ -172,67 +171,6 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	}
 
 	err = s.store.Update(id, input)
-	if err != nil {
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	return nil
-}
-
-func (s *Service) Start(ctx context.Context, id int) error {
-	tombola, err := s.store.FindById(id)
-	if err != nil {
-		if goErrors.Is(err, sql.ErrNoRows) {
-			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
-			}
-		}
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	kermesse, err := s.kermesseStore.FindById(tombola.KermesseId)
-	if err != nil {
-		if goErrors.Is(err, sql.ErrNoRows) {
-			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
-			}
-		}
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
-	if kermesse.Status == types.KermesseStatusEnded {
-		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("kermesse is ended"),
-		}
-	}
-
-	userId, ok := ctx.Value(types.UserIDKey).(int)
-	if !ok {
-		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
-		}
-	}
-	if kermesse.UserId != userId {
-		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
-		}
-	}
-
-	err = s.store.UpdateStatus(id, types.TombolaStatusStarted)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
