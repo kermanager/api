@@ -1,12 +1,14 @@
 package interaction
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/internal/types"
 )
 
 type InteractionStore interface {
-	FindAll() ([]types.Interaction, error)
+	FindAll(filters map[string]interface{}) ([]types.Interaction, error)
 	FindById(id int) (types.Interaction, error)
 	CanCreate(input map[string]interface{}) (bool, error)
 	Create(input map[string]interface{}) error
@@ -23,9 +25,33 @@ func NewStore(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) FindAll() ([]types.Interaction, error) {
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.Interaction, error) {
 	interactions := []types.Interaction{}
-	query := "SELECT * FROM interactions"
+	query := `
+		SELECT DISTINCT
+			i.id AS id,
+			i.kermesse_id AS kermesse_id,
+			i.type AS type,
+			i.status AS status,
+			i.credit AS credit,
+			i.point AS point,
+			u.id AS "user.id",
+			u.name AS "user.name",
+			u.email AS "user.email",
+			u.role AS "user.role",
+			s.id AS "user.id",
+			s.name AS "user.name",
+			s.description AS "user.description",
+			s.type AS "user.type",
+			s.price AS "user.price"
+		FROM interactions i
+		FULL OUTER JOIN users u ON i.user_id = u.id
+		FULL OUTER JOIN stands s ON i.stand_id = s.id
+		WHERE 1=1
+	`
+	if filters["kermesse_id"] != nil {
+		query += fmt.Sprintf(" AND i.kermesse_id = %v", filters["kermesse_id"])
+	}
 	err := s.db.Select(&interactions, query)
 
 	return interactions, err

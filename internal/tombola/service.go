@@ -12,7 +12,7 @@ import (
 )
 
 type TombolaService interface {
-	GetAll(ctx context.Context) ([]types.Tombola, error)
+	GetAll(ctx context.Context, params map[string]interface{}) ([]types.Tombola, error)
 	Get(ctx context.Context, id int) (types.Tombola, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
@@ -32,8 +32,13 @@ func NewService(store TombolaStore, kermesseStore kermesse.KermesseStore) *Servi
 	}
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]types.Tombola, error) {
-	tombolas, err := s.store.FindAll()
+func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.Tombola, error) {
+	filters := map[string]interface{}{}
+	if params["kermesse_id"] != nil {
+		filters["kermesse_id"] = params["kermesse_id"]
+	}
+
+	tombolas, err := s.store.FindAll(filters)
 	if err != nil {
 		return nil, errors.CustomError{
 			Key: errors.InternalServerError,

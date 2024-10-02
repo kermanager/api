@@ -11,6 +11,7 @@ import (
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
+	"github.com/kermanager/pkg/utils"
 )
 
 type InteractionHandler struct {
@@ -33,7 +34,7 @@ func (h *InteractionHandler) RegisterRoutes(mux *mux.Router) {
 }
 
 func (h *InteractionHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	interactions, err := h.service.GetAll(r.Context())
+	interactions, err := h.service.GetAll(r.Context(), utils.GetQueryParams(r))
 	if err != nil {
 		return err
 	}

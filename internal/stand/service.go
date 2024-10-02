@@ -10,7 +10,7 @@ import (
 )
 
 type StandService interface {
-	GetAll(ctx context.Context) ([]types.Stand, error)
+	GetAll(ctx context.Context, params map[string]interface{}) ([]types.Stand, error)
 	Get(ctx context.Context, id int) (types.Stand, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
@@ -26,8 +26,13 @@ func NewService(store StandStore) *Service {
 	}
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]types.Stand, error) {
-	stands, err := s.store.FindAll()
+func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.Stand, error) {
+	filters := map[string]interface{}{}
+	if params["kermesse_id"] != nil {
+		filters["kermesse_id"] = params["kermesse_id"]
+	}
+
+	stands, err := s.store.FindAll(params)
 	if err != nil {
 		return nil, errors.CustomError{
 			Key: errors.InternalServerError,

@@ -1,12 +1,14 @@
 package stand
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/internal/types"
 )
 
 type StandStore interface {
-	FindAll() ([]types.Stand, error)
+	FindAll(filters map[string]interface{}) ([]types.Stand, error)
 	FindById(id int) (types.Stand, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
@@ -23,9 +25,24 @@ func NewStore(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) FindAll() ([]types.Stand, error) {
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.Stand, error) {
 	stands := []types.Stand{}
-	query := "SELECT * FROM stands"
+	query := `
+		SELECT DISTINCT
+			s.id AS id,
+			s.user_id AS user_id,
+			s.name AS name,
+			s.description AS description,
+			s.type AS type,
+			s.price AS price,
+			s.stock AS stock
+		FROM stands s
+		FULL OUTER JOIN kermesses_stands ks ON s.id = ks.stand_id
+		WHERE 1=1
+	`
+	if filters["kermesse_id"] != nil {
+		query += fmt.Sprintf(" AND ks.kermesse_id = %v", filters["kermesse_id"])
+	}
 	err := s.db.Select(&stands, query)
 
 	return stands, err

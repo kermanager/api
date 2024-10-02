@@ -1,12 +1,14 @@
 package tombola
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/internal/types"
 )
 
 type TombolaStore interface {
-	FindAll() ([]types.Tombola, error)
+	FindAll(filters map[string]interface{}) ([]types.Tombola, error)
 	FindById(id int) (types.Tombola, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
@@ -24,11 +26,23 @@ func NewStore(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) FindAll() ([]types.Tombola, error) {
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.Tombola, error) {
 	tombolas := []types.Tombola{}
-	query := "SELECT * FROM tombolas"
+	query := `
+		SELECT DISTINCT
+			t.id AS id,
+			t.kermesse_id AS kermesse_id,
+			t.name AS name,
+			t.status AS status,
+			t.price AS price,
+			t.gift AS gift
+		FROM tombolas t
+		WHERE 1=1
+	`
+	if filters["kermesse_id"] != nil {
+		query += fmt.Sprintf(" AND t.kermesse_id = %v", filters["kermesse_id"])
+	}
 	err := s.db.Select(&tombolas, query)
-
 	return tombolas, err
 }
 

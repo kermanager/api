@@ -11,6 +11,7 @@ import (
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
+	"github.com/kermanager/pkg/utils"
 )
 
 type TombolaHandler struct {
@@ -35,7 +36,7 @@ func (h *TombolaHandler) RegisterRoutes(mux *mux.Router) {
 }
 
 func (h *TombolaHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	tombolas, err := h.service.GetAll(r.Context())
+	tombolas, err := h.service.GetAll(r.Context(), utils.GetQueryParams(r))
 	if err != nil {
 		return err
 	}

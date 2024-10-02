@@ -11,6 +11,7 @@ import (
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
+	"github.com/kermanager/pkg/utils"
 )
 
 type StandHandler struct {
@@ -33,7 +34,7 @@ func (h *StandHandler) RegisterRoutes(mux *mux.Router) {
 }
 
 func (h *StandHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	stands, err := h.service.GetAll(r.Context())
+	stands, err := h.service.GetAll(r.Context(), utils.GetQueryParams(r))
 	if err != nil {
 		return err
 	}

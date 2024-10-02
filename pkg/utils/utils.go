@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net/http"
 )
 
 func GetIntFromMap(input map[string]interface{}, key string) (int, error) {
@@ -16,4 +17,19 @@ func GetIntFromMap(input map[string]interface{}, key string) (int, error) {
 	}
 
 	return int(floatValue), nil
+}
+
+func GetQueryParams(r *http.Request) map[string]interface{} {
+	query := r.URL.Query()
+	params := map[string]interface{}{}
+
+	for key, value := range query {
+		if len(value) == 1 {
+			params[key] = value[0]
+		} else {
+			params[key] = value
+		}
+	}
+
+	return params
 }

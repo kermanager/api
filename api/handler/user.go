@@ -10,6 +10,7 @@ import (
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/json"
+	"github.com/kermanager/pkg/utils"
 )
 
 type UserHandler struct {
@@ -35,23 +36,8 @@ func (h *UserHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/me", errors.ErrorHandler(middleware.IsAuth(h.GetMe, h.store))).Methods(http.MethodGet)
 }
 
-func getQueryParams(r *http.Request) map[string]interface{} {
-	query := r.URL.Query()
-	params := map[string]interface{}{}
-
-	for key, value := range query {
-		if len(value) == 1 {
-			params[key] = value[0]
-		} else {
-			params[key] = value
-		}
-	}
-
-	return params
-}
-
 func (h *UserHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	users, err := h.service.GetAll(r.Context(), getQueryParams(r))
+	users, err := h.service.GetAll(r.Context(), utils.GetQueryParams(r))
 	if err != nil {
 		return err
 	}
