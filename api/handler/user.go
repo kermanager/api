@@ -25,6 +25,7 @@ func NewUserHandler(service user.UserService, store user.UserStore) *UserHandler
 }
 
 func (h *UserHandler) RegisterRoutes(mux *mux.Router) {
+	mux.Handle("/users", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.store))).Methods(http.MethodGet)
 	mux.Handle("/users/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.store))).Methods(http.MethodGet)
 	mux.Handle("/users/invite", errors.ErrorHandler(middleware.IsAuth(h.Invite, h.store, types.UserRoleParent))).Methods(http.MethodPost)
 	mux.Handle("/users/pay", errors.ErrorHandler(middleware.IsAuth(h.Pay, h.store, types.UserRoleParent))).Methods(http.MethodPatch)
@@ -32,6 +33,37 @@ func (h *UserHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/sign-up", errors.ErrorHandler(h.SignUp)).Methods(http.MethodPost)
 	mux.Handle("/sign-in", errors.ErrorHandler(h.SignIn)).Methods(http.MethodPost)
 	mux.Handle("/me", errors.ErrorHandler(middleware.IsAuth(h.GetMe, h.store))).Methods(http.MethodGet)
+}
+
+func getQueryParams(r *http.Request) map[string]interface{} {
+	query := r.URL.Query()
+	params := map[string]interface{}{}
+
+	for key, value := range query {
+		if len(value) == 1 {
+			params[key] = value[0]
+		} else {
+			params[key] = value
+		}
+	}
+
+	return params
+}
+
+func (h *UserHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
+	users, err := h.service.GetAll(r.Context(), getQueryParams(r))
+	if err != nil {
+		return err
+	}
+
+	if err := json.Write(w, http.StatusOK, users); err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
 }
 
 func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) error {

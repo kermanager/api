@@ -46,16 +46,16 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.Kermesse, error
 		WHERE 1=1
 	`
 	if filters["manager_id"] != nil {
-		query += fmt.Sprintf(" AND ku.user_id = %s", filters["manager_id"].(string))
+		query += fmt.Sprintf(" AND k.user_id = %v", filters["manager_id"])
 	}
 	if filters["parent_id"] != nil {
-		query += fmt.Sprintf(" AND ku.user_id = %s", filters["parent_id"].(string))
+		query += fmt.Sprintf(" AND ku.user_id = %v", filters["parent_id"])
 	}
 	if filters["child_id"] != nil {
-		query += fmt.Sprintf(" AND ku.user_id = %s", filters["child_id"].(string))
+		query += fmt.Sprintf(" AND ku.user_id = %v", filters["child_id"])
 	}
 	if filters["stand_holder_id"] != nil {
-		query += fmt.Sprintf(" AND ks.stand_id IS NOT NULL AND s.user_id = %s", filters["stand_holder_id"].(string))
+		query += fmt.Sprintf(" AND ks.stand_id IS NOT NULL AND s.user_id = %v", filters["stand_holder_id"])
 	}
 	err := s.db.Select(&kermesses, query)
 

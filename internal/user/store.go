@@ -1,11 +1,14 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/internal/types"
 )
 
 type UserStore interface {
+	FindAll(filters map[string]interface{}) ([]types.UserBasic, error)
 	FindById(id int) (types.User, error)
 	FindByEmail(email string) (types.User, error)
 	Create(input map[string]interface{}) error
@@ -20,6 +23,27 @@ func NewStore(db *sqlx.DB) *Store {
 	return &Store{
 		db: db,
 	}
+}
+
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.UserBasic, error) {
+	users := []types.UserBasic{}
+	query := `
+		SELECT DISTINCT
+			u.id AS id,
+			u.name AS name,
+			u.email AS email,
+			u.role AS role,
+			u.credit AS credit
+		FROM users u
+		FULL OUTER JOIN kermesses_users ku ON u.id = ku.user_id
+		WHERE 1=1
+	`
+	if filters["kermesse_id"] != nil {
+		query += fmt.Sprintf(" AND ku.kermesse_id = %v", filters["kermesse_id"])
+	}
+	err := s.db.Select(&users, query)
+
+	return users, err
 }
 
 func (s *Store) FindById(id int) (types.User, error) {

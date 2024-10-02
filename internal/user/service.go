@@ -17,6 +17,7 @@ import (
 )
 
 type UserService interface {
+	GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
 	Get(ctx context.Context, id int) (types.UserBasic, error)
 	Invite(ctx context.Context, input map[string]interface{}) error
 	Pay(ctx context.Context, input map[string]interface{}) error
@@ -34,6 +35,23 @@ func NewService(store UserStore) *Service {
 	return &Service{
 		store: store,
 	}
+}
+
+func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error) {
+	filters := map[string]interface{}{}
+	if params["kermesse_id"] != nil {
+		filters["kermesse_id"] = params["kermesse_id"]
+	}
+
+	users, err := s.store.FindAll(filters)
+	if err != nil {
+		return nil, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return users, nil
 }
 
 func (s *Service) Get(ctx context.Context, id int) (types.UserBasic, error) {
