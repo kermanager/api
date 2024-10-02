@@ -256,6 +256,15 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 		}
 	}
 
+	// invite child
+	err = s.store.AddUser(input)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
 	// invite child parent if exists
 	if child.ParentId != nil {
 		input["user_id"] = child.ParentId
@@ -265,14 +274,6 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 				Key: errors.InternalServerError,
 				Err: err,
 			}
-		}
-	}
-
-	err = s.store.AddUser(input)
-	if err != nil {
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
 		}
 	}
 
