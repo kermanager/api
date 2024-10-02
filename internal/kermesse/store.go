@@ -1,12 +1,14 @@
 package kermesse
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kermanager/internal/types"
 )
 
 type KermesseStore interface {
-	FindAll() ([]types.Kermesse, error)
+	FindAll(filters map[string]interface{}) ([]types.Kermesse, error)
 	FindById(id int) (types.Kermesse, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
@@ -28,9 +30,33 @@ func NewStore(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) FindAll() ([]types.Kermesse, error) {
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.Kermesse, error) {
 	kermesses := []types.Kermesse{}
-	query := "SELECT * FROM kermesses"
+	query := `
+		SELECT DISTINCT
+			k.id AS id,
+			k.user_id AS user_id,
+			k.name AS name,
+			k.description AS description,
+			k.status AS status
+		FROM kermesses k
+		FULL OUTER JOIN kermesses_users ku ON k.id = ku.kermesse_id
+		FULL OUTER JOIN kermesses_stands ks ON k.id = ks.kermesse_id
+		FULL OUTER JOIN stands s ON ks.stand_id = s.id
+		WHERE 1=1
+	`
+	if filters["manager_id"] != nil {
+		query += fmt.Sprintf(" AND ku.user_id = %s", filters["manager_id"].(string))
+	}
+	if filters["parent_id"] != nil {
+		query += fmt.Sprintf(" AND ku.user_id = %s", filters["parent_id"].(string))
+	}
+	if filters["child_id"] != nil {
+		query += fmt.Sprintf(" AND ku.user_id = %s", filters["child_id"].(string))
+	}
+	if filters["stand_holder_id"] != nil {
+		query += fmt.Sprintf(" AND ks.stand_id IS NOT NULL AND s.user_id = %s", filters["stand_holder_id"].(string))
+	}
 	err := s.db.Select(&kermesses, query)
 
 	return kermesses, err
