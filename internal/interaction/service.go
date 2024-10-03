@@ -227,7 +227,7 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		}
 	}
 
-	kermesse, err := s.kermesseStore.FindById(interaction.KermesseId)
+	kermesse, err := s.kermesseStore.FindById(interaction.Kermesse.Id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -247,7 +247,7 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		}
 	}
 
-	stand, err := s.standStore.FindById(interaction.StandId)
+	stand, err := s.standStore.FindById(interaction.Stand.Id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{

@@ -8,17 +8,6 @@ const (
 	InteractionStatusEnded   string = "ENDED"
 )
 
-type Interaction struct {
-	Id         int    `json:"id" db:"id"`
-	UserId     int    `json:"user_id" db:"user_id"`
-	KermesseId int    `json:"kermesse_id" db:"kermesse_id"`
-	StandId    int    `json:"stand_id" db:"stand_id"`
-	Type       string `json:"type" db:"type"`
-	Status     string `json:"status" db:"status"`
-	Credit     int    `json:"credit" db:"credit"`
-	Point      int    `json:"point" db:"point"`
-}
-
 type InteractionUser struct {
 	Id    int    `json:"id" db:"id"`
 	Name  string `json:"name" db:"name"`
@@ -34,13 +23,30 @@ type InteractionStand struct {
 	Price       int    `json:"price" db:"price"`
 }
 
+type InteractionKermesse struct {
+	Id          int    `json:"id" db:"id"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description" db:"description"`
+	Status      string `json:"status" db:"status"`
+}
+
+type Interaction struct {
+	Id       int                 `json:"id" db:"id"`
+	Type     string              `json:"type" db:"type"`
+	Status   string              `json:"status" db:"status"`
+	Credit   int                 `json:"credit" db:"credit"`
+	Point    int                 `json:"point" db:"point"`
+	User     InteractionUser     `json:"user" db:"user"`
+	Stand    InteractionStand    `json:"stand" db:"stand"`
+	Kermesse InteractionKermesse `json:"kermesse" db:"kermesse"`
+}
+
 type InteractionBasic struct {
-	Id         int              `json:"id" db:"id"`
-	KermesseId int              `json:"kermesse_id" db:"kermesse_id"`
-	Type       string           `json:"type" db:"type"`
-	Status     string           `json:"status" db:"status"`
-	Credit     int              `json:"credit" db:"credit"`
-	Point      int              `json:"point" db:"point"`
-	User       InteractionUser  `json:"user" db:"user"`
-	Stand      InteractionStand `json:"stand" db:"stand"`
+	Id     int              `json:"id" db:"id"`
+	Type   string           `json:"type" db:"type"`
+	Status string           `json:"status" db:"status"`
+	Credit int              `json:"credit" db:"credit"`
+	Point  int              `json:"point" db:"point"`
+	User   InteractionUser  `json:"user" db:"user"`
+	Stand  InteractionStand `json:"stand" db:"stand"`
 }

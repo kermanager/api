@@ -30,7 +30,6 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.InteractionBasi
 	query := `
 		SELECT DISTINCT
 			i.id AS id,
-			i.kermesse_id AS kermesse_id,
 			i.type AS type,
 			i.status AS status,
 			i.credit AS credit,
@@ -59,7 +58,32 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.InteractionBasi
 
 func (s *Store) FindById(id int) (types.Interaction, error) {
 	interaction := types.Interaction{}
-	query := "SELECT * FROM interactions WHERE id=$1"
+	query := `
+		SELECT
+			i.id AS id,
+			i.type AS type,
+			i.status AS status,
+			i.credit AS credit,
+			i.point AS point,
+			u.id AS "user.id",
+			u.name AS "user.name",
+			u.email AS "user.email",
+			u.role AS "user.role",
+			s.id AS "stand.id",
+			s.name AS "stand.name",
+			s.description AS "stand.description",
+			s.type AS "stand.type",
+			s.price AS "stand.price",
+			k.id AS "kermesse.id",
+			k.name AS "kermesse.name",
+			k.description AS "kermesse.description",
+			k.status AS "kermesse.status"
+		FROM interactions i
+		JOIN users u ON i.user_id = u.id
+		JOIN stands s ON i.stand_id = s.id
+		JOIN kermesses k ON i.kermesse_id = k.id
+		WHERE i.id=$1
+	`
 	err := s.db.Get(&interaction, query, id)
 
 	return interaction, err
