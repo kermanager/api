@@ -19,6 +19,7 @@ import (
 type UserService interface {
 	GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
 	Get(ctx context.Context, id int) (types.UserBasic, error)
+	Update(ctx context.Context, id int, input map[string]interface{}) error
 	Invite(ctx context.Context, input map[string]interface{}) error
 	Pay(ctx context.Context, input map[string]interface{}) error
 
@@ -76,6 +77,59 @@ func (s *Service) Get(ctx context.Context, id int) (types.UserBasic, error) {
 		Role:   user.Role,
 		Credit: user.Credit,
 	}, nil
+}
+
+func (s *Service) Update(ctx context.Context, id int, input map[string]interface{}) error {
+	user, err := s.store.FindById(id)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	if user.Id != userId {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
+		}
+	}
+
+	if !hasher.Compare(user.Password, input["password"].(string)) {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("invalid password"),
+		}
+	}
+
+	hashedPassword, err := hasher.Hash(input["new_password"].(string))
+	if err != nil {
+		return err
+	}
+	input["new_password"] = hashedPassword
+
+	err = s.store.Update(id, input)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
 }
 
 func (s *Service) Invite(ctx context.Context, input map[string]interface{}) error {

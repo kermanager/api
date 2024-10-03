@@ -12,6 +12,7 @@ type UserStore interface {
 	FindById(id int) (types.User, error)
 	FindByEmail(email string) (types.User, error)
 	Create(input map[string]interface{}) error
+	Update(id int, input map[string]interface{}) error
 	UpdateCredit(id int, amount int) error
 }
 
@@ -65,6 +66,13 @@ func (s *Store) FindByEmail(email string) (types.User, error) {
 func (s *Store) Create(input map[string]interface{}) error {
 	query := "INSERT INTO users (parent_id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)"
 	_, err := s.db.Exec(query, input["parent_id"], input["name"], input["email"], input["password"], input["role"])
+
+	return err
+}
+
+func (s *Store) Update(id int, input map[string]interface{}) error {
+	query := "UPDATE users SET password=$1 WHERE id=$2"
+	_, err := s.db.Exec(query, input["new_password"], id)
 
 	return err
 }
