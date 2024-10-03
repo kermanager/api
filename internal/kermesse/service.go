@@ -13,6 +13,7 @@ import (
 
 type KermesseService interface {
 	GetAll(ctx context.Context) ([]types.Kermesse, error)
+	GetUsersInvite(ctx context.Context, id int) ([]types.UserBasic, error)
 	Get(ctx context.Context, id int) (types.Kermesse, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
@@ -70,6 +71,18 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Kermesse, error) {
 	}
 
 	return kermesses, nil
+}
+
+func (s *Service) GetUsersInvite(ctx context.Context, id int) ([]types.UserBasic, error) {
+	users, err := s.store.FindUsersInvite(id)
+	if err != nil {
+		return nil, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return users, nil
 }
 
 func (s *Service) Get(ctx context.Context, id int) (types.Kermesse, error) {

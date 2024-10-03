@@ -9,6 +9,7 @@ import (
 
 type KermesseStore interface {
 	FindAll(filters map[string]interface{}) ([]types.Kermesse, error)
+	FindUsersInvite(id int) ([]types.UserBasic, error)
 	FindById(id int) (types.Kermesse, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
@@ -60,6 +61,24 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.Kermesse, error
 	err := s.db.Select(&kermesses, query)
 
 	return kermesses, err
+}
+
+func (s *Store) FindUsersInvite(id int) ([]types.UserBasic, error) {
+	users := []types.UserBasic{}
+	query := `
+		SELECT DISTINCT
+			u.id AS id,
+			u.name AS name,
+			u.email AS email,
+			u.role AS role,
+			u.credit AS credit
+		FROM users u
+		LEFT JOIN kermesses_users ku ON u.id = ku.user_id
+		WHERE u.id IS NOT NULL AND role='CHILD' AND ku.kermesse_id IS NULL OR ku.kermesse_id != $1
+	`
+	err := s.db.Select(&users, query, id)
+
+	return users, err
 }
 
 func (s *Store) FindById(id int) (types.Kermesse, error) {
