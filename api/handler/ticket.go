@@ -26,8 +26,8 @@ func NewTicketHandler(service ticket.TicketService, userStore user.UserStore) *T
 }
 
 func (h *TicketHandler) RegisterRoutes(mux *mux.Router) {
-	mux.Handle("/tickets", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
-	mux.Handle("/tickets/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
+	mux.Handle("/tickets", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore, types.UserRoleManager, types.UserRoleParent, types.UserRoleChild))).Methods(http.MethodGet)
+	mux.Handle("/tickets/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore, types.UserRoleManager, types.UserRoleParent, types.UserRoleChild))).Methods(http.MethodGet)
 	mux.Handle("/tickets", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleChild))).Methods(http.MethodPost)
 }
 
