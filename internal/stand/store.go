@@ -37,11 +37,24 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.Stand, error) {
 			s.price AS price,
 			s.stock AS stock
 		FROM stands s
-		FULL OUTER JOIN kermesses_stands ks ON s.id = ks.stand_id
-		WHERE 1=1
+		LEFT JOIN kermesses_stands ks ON s.id = ks.stand_id
+		WHERE 1=1 AND s.id IS NOT NULL
 	`
 	if filters["kermesse_id"] != nil {
-		query += fmt.Sprintf(" AND ks.kermesse_id = %v", filters["kermesse_id"])
+		query += fmt.Sprintf(" AND ks.kermesse_id IS NOT NULL AND ks.kermesse_id = %v", filters["kermesse_id"])
+	}
+	if filters["is_free"] != nil {
+		query += `
+			AND (
+				ks.kermesse_id IS NULL
+				OR s.id NOT IN (
+					SELECT ks_inner.stand_id 
+					FROM kermesses_stands ks_inner
+					JOIN kermesses k ON ks_inner.kermesse_id = k.id
+					WHERE k.status = 'STARTED'
+				)
+			)
+    `
 	}
 	err := s.db.Select(&stands, query)
 

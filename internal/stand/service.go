@@ -31,6 +31,9 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	if params["kermesse_id"] != nil {
 		filters["kermesse_id"] = params["kermesse_id"]
 	}
+	if params["is_free"] != nil {
+		filters["is_free"] = params["is_free"]
+	}
 
 	stands, err := s.store.FindAll(params)
 	if err != nil {

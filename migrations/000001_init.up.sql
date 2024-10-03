@@ -76,7 +76,7 @@ CREATE TABLE "tombolas" (
   "id" SERIAL PRIMARY KEY,
   "kermesse_id" INTEGER NOT NULL REFERENCES "kermesses"("id"),
   "name" VARCHAR(255) NOT NULL,
-  "status" VARCHAR(255) NOT NULL DEFAULT 'STARTED',
+  "status" tombolas_status_enum NOT NULL DEFAULT 'STARTED',
   "price" INTEGER NOT NULL DEFAULT 0,
   "gift" VARCHAR(255) NOT NULL
 );

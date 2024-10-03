@@ -32,8 +32,8 @@ func (h *KermesseHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/kermesses/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 	mux.Handle("/kermesses/{id}/end", errors.ErrorHandler(middleware.IsAuth(h.End, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 
-	mux.Handle("/kermesses/{id}/users", errors.ErrorHandler(middleware.IsAuth(h.AddUser, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
-	mux.Handle("/kermesses/{id}/stands", errors.ErrorHandler(middleware.IsAuth(h.AddStand, h.userStore, types.UserRoleManager))).Methods(http.MethodPost)
+	mux.Handle("/kermesses/{id}/users", errors.ErrorHandler(middleware.IsAuth(h.AddUser, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
+	mux.Handle("/kermesses/{id}/stands", errors.ErrorHandler(middleware.IsAuth(h.AddStand, h.userStore, types.UserRoleManager))).Methods(http.MethodPatch)
 }
 
 func (h *KermesseHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
