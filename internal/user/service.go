@@ -18,6 +18,7 @@ import (
 
 type UserService interface {
 	GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
+	GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
 	Get(ctx context.Context, id int) (types.UserBasic, error)
 	Update(ctx context.Context, id int, input map[string]interface{}) error
 	UpdateCredit(input map[string]interface{}) error
@@ -46,6 +47,26 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	}
 
 	users, err := s.store.FindAll(filters)
+	if err != nil {
+		return nil, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return users, nil
+}
+
+func (s *Service) GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error) {
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return nil, errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+
+	users, err := s.store.FindAllChildren(userId)
 	if err != nil {
 		return nil, errors.CustomError{
 			Key: errors.InternalServerError,
