@@ -65,7 +65,7 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 		filters["kermesse_id"] = params["kermesse_id"]
 	}
 
-	interactions, err := s.store.FindAll(params)
+	interactions, err := s.store.FindAll(filters)
 	if err != nil {
 		return nil, errors.CustomError{
 			Key: errors.InternalServerError,
