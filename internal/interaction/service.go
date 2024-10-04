@@ -37,7 +37,30 @@ func NewService(store InteractionStore, standStore stand.StandStore, userStore u
 }
 
 func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.InteractionBasic, error) {
+
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return nil, errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	userRole, ok := ctx.Value(types.UserRoleKey).(string)
+	if !ok {
+		return nil, errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user role not found in context"),
+		}
+	}
+
 	filters := map[string]interface{}{}
+	if userRole == types.UserRoleParent {
+		filters["parent_id"] = userId
+	} else if userRole == types.UserRoleChild {
+		filters["child_id"] = userId
+	} else if userRole == types.UserRoleStandHolder {
+		filters["stand_holder_id"] = userId
+	}
 	if params["kermesse_id"] != nil {
 		filters["kermesse_id"] = params["kermesse_id"]
 	}

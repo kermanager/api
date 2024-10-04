@@ -51,6 +51,15 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.InteractionBasi
 	if filters["kermesse_id"] != nil {
 		query += fmt.Sprintf(" AND i.kermesse_id = %v", filters["kermesse_id"])
 	}
+	if filters["parent_id"] != nil {
+		query += fmt.Sprintf(" AND (u.id = %v OR u.parent_id = %v)", filters["parent_id"], filters["parent_id"])
+	}
+	if filters["child_id"] != nil {
+		query += fmt.Sprintf(" AND u.id = %v", filters["child_id"])
+	}
+	if filters["stand_holder_id"] != nil {
+		query += fmt.Sprintf(" AND s.user_id = %v", filters["stand_holder_id"])
+	}
 	err := s.db.Select(&interactions, query)
 
 	return interactions, err
