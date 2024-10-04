@@ -28,9 +28,10 @@ func NewStandHandler(service stand.StandService, userStore user.UserStore) *Stan
 
 func (h *StandHandler) RegisterRoutes(mux *mux.Router) {
 	mux.Handle("/stands", errors.ErrorHandler(middleware.IsAuth(h.GetAll, h.userStore))).Methods(http.MethodGet)
+	mux.Handle("/stands/current", errors.ErrorHandler(middleware.IsAuth(h.GetCurrent, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodGet)
 	mux.Handle("/stands/{id}", errors.ErrorHandler(middleware.IsAuth(h.Get, h.userStore))).Methods(http.MethodGet)
 	mux.Handle("/stands", errors.ErrorHandler(middleware.IsAuth(h.Create, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodPost)
-	mux.Handle("/stands/{id}", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodPatch)
+	mux.Handle("/stands", errors.ErrorHandler(middleware.IsAuth(h.Update, h.userStore, types.UserRoleStandHolder))).Methods(http.MethodPatch)
 }
 
 func (h *StandHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
@@ -74,6 +75,22 @@ func (h *StandHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (h *StandHandler) GetCurrent(w http.ResponseWriter, r *http.Request) error {
+	stand, err := h.service.GetCurrent(r.Context())
+	if err != nil {
+		return err
+	}
+
+	if err := json.Write(w, http.StatusOK, stand); err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
+}
+
 func (h *StandHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
@@ -98,15 +115,6 @@ func (h *StandHandler) Create(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *StandHandler) Update(w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
-		}
-	}
-
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
@@ -115,7 +123,7 @@ func (h *StandHandler) Update(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	if err := h.service.Update(r.Context(), id, input); err != nil {
+	if err := h.service.UpdateCurrent(r.Context(), input); err != nil {
 		return err
 	}
 

@@ -12,8 +12,10 @@ import (
 type StandService interface {
 	GetAll(ctx context.Context, params map[string]interface{}) ([]types.Stand, error)
 	Get(ctx context.Context, id int) (types.Stand, error)
+	GetCurrent(ctx context.Context) (types.Stand, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
+	UpdateCurrent(ctx context.Context, input map[string]interface{}) error
 }
 
 type Service struct {
@@ -48,6 +50,32 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 
 func (s *Service) Get(ctx context.Context, id int) (types.Stand, error) {
 	stand, err := s.store.FindById(id)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return stand, errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return stand, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return stand, nil
+}
+
+func (s *Service) GetCurrent(ctx context.Context) (types.Stand, error) {
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return types.Stand{}, errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+
+	stand, err := s.store.FindByUserId(userId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return stand, errors.CustomError{
@@ -115,6 +143,26 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	}
 
 	err = s.store.Update(id, input)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) UpdateCurrent(ctx context.Context, input map[string]interface{}) error {
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+
+	err := s.store.UpdateByUserId(userId, input)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,

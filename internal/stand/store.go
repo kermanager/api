@@ -10,8 +10,10 @@ import (
 type StandStore interface {
 	FindAll(filters map[string]interface{}) ([]types.Stand, error)
 	FindById(id int) (types.Stand, error)
+	FindByUserId(id int) (types.Stand, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
+	UpdateByUserId(userId int, input map[string]interface{}) error
 	UpdateStock(id int, n int) error
 }
 
@@ -69,6 +71,14 @@ func (s *Store) FindById(id int) (types.Stand, error) {
 	return stand, err
 }
 
+func (s *Store) FindByUserId(userId int) (types.Stand, error) {
+	stand := types.Stand{}
+	query := "SELECT * FROM stands WHERE user_id=$1 LIMIT 1"
+	err := s.db.Get(&stand, query, userId)
+
+	return stand, err
+}
+
 func (s *Store) Create(input map[string]interface{}) error {
 	query := "INSERT INTO stands (user_id, name, description, type, price, stock) VALUES ($1, $2, $3, $4, $5, $6)"
 	_, err := s.db.Exec(query, input["user_id"], input["name"], input["description"], input["type"], input["price"], input["stock"])
@@ -79,6 +89,13 @@ func (s *Store) Create(input map[string]interface{}) error {
 func (s *Store) Update(id int, input map[string]interface{}) error {
 	query := "UPDATE stands SET name=$1, description=$2, price=$3, stock=$4 WHERE id=$5"
 	_, err := s.db.Exec(query, input["name"], input["description"], input["price"], input["stock"], id)
+
+	return err
+}
+
+func (s *Store) UpdateByUserId(userId int, input map[string]interface{}) error {
+	query := "UPDATE stands SET name=$1, description=$2, price=$3, stock=$4 WHERE user_id=$5"
+	_, err := s.db.Exec(query, input["name"], input["description"], input["price"], input["stock"], userId)
 
 	return err
 }
