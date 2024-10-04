@@ -20,6 +20,7 @@ type UserService interface {
 	GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
 	Get(ctx context.Context, id int) (types.UserBasic, error)
 	Update(ctx context.Context, id int, input map[string]interface{}) error
+	UpdateCredit(input map[string]interface{}) error
 	Invite(ctx context.Context, input map[string]interface{}) error
 	Pay(ctx context.Context, input map[string]interface{}) error
 
@@ -180,6 +181,53 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	// - To: input["email"]
 	// - Subject: "Invitation to join our platform"
 	// - Body: "You have been invited to join our platform. Your credentials are as follows: Email: input["email"], Password: randomPassword"
+
+	return nil
+}
+
+func (s *Service) UpdateCredit(input map[string]interface{}) error {
+	inputUserId, err := utils.GetIntFromMap(input, "user_id")
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: err,
+		}
+	}
+	user, err := s.store.FindById(inputUserId)
+	if err != nil {
+		if goErrors.Is(err, sql.ErrNoRows) {
+			return errors.CustomError{
+				Key: errors.NotFound,
+				Err: err,
+			}
+		}
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+	if user.Role != types.UserRoleParent {
+		return errors.CustomError{
+			Key: errors.Forbidden,
+			Err: goErrors.New("forbidden"),
+		}
+	}
+
+	credit, err := utils.GetIntFromMap(input, "credit")
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: err,
+		}
+	}
+
+	err = s.store.UpdateCredit(inputUserId, credit)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
 
 	return nil
 }
