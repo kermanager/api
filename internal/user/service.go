@@ -58,6 +58,11 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 }
 
 func (s *Service) GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error) {
+	filters := map[string]interface{}{}
+	if params["kermesse_id"] != nil {
+		filters["kermesse_id"] = params["kermesse_id"]
+	}
+
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return nil, errors.CustomError{
@@ -66,7 +71,7 @@ func (s *Service) GetAllChildren(ctx context.Context, params map[string]interfac
 		}
 	}
 
-	users, err := s.store.FindAllChildren(userId)
+	users, err := s.store.FindAllChildren(userId, filters)
 	if err != nil {
 		return nil, errors.CustomError{
 			Key: errors.InternalServerError,

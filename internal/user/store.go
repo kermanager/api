@@ -9,7 +9,7 @@ import (
 
 type UserStore interface {
 	FindAll(filters map[string]interface{}) ([]types.UserBasic, error)
-	FindAllChildren(id int) ([]types.UserBasic, error)
+	FindAllChildren(id int, filters map[string]interface{}) ([]types.UserBasic, error)
 	FindById(id int) (types.User, error)
 	FindByEmail(email string) (types.User, error)
 	Create(input map[string]interface{}) error
@@ -48,18 +48,22 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.UserBasic, erro
 	return users, err
 }
 
-func (s *Store) FindAllChildren(id int) ([]types.UserBasic, error) {
+func (s *Store) FindAllChildren(id int, filters map[string]interface{}) ([]types.UserBasic, error) {
 	users := []types.UserBasic{}
 	query := `
-		SELECT
+		SELECT DISTINCT
 			u.id AS id,
 			u.name AS name,
 			u.email AS email,
 			u.role AS role,
 			u.credit AS credit
 		FROM users u
+		FULL OUTER JOIN kermesses_users ku ON u.id = ku.user_id
 		WHERE u.role=$1 AND u.parent_id=$2
 	`
+	if filters["kermesse_id"] != nil {
+		query += fmt.Sprintf(" AND ku.kermesse_id = %v", filters["kermesse_id"])
+	}
 	err := s.db.Select(&users, query, types.UserRoleChild, id)
 
 	return users, err
