@@ -26,8 +26,8 @@ type UserService interface {
 	Pay(ctx context.Context, input map[string]interface{}) error
 
 	SignUp(ctx context.Context, input map[string]interface{}) error
-	SignIn(ctx context.Context, input map[string]interface{}) (types.UserBasicWithToken, error)
-	GetMe(ctx context.Context) (types.UserBasic, error)
+	SignIn(ctx context.Context, input map[string]interface{}) (types.UserMe, error)
+	GetMe(ctx context.Context) (types.UserMe, error)
 }
 
 type Service struct {
@@ -375,23 +375,23 @@ func (s *Service) SignUp(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-func (s *Service) SignIn(ctx context.Context, input map[string]interface{}) (types.UserBasicWithToken, error) {
+func (s *Service) SignIn(ctx context.Context, input map[string]interface{}) (types.UserMe, error) {
 	user, err := s.store.FindByEmail(input["email"].(string))
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
-			return types.UserBasicWithToken{}, errors.CustomError{
+			return types.UserMe{}, errors.CustomError{
 				Key: errors.NotFound,
 				Err: err,
 			}
 		}
-		return types.UserBasicWithToken{}, errors.CustomError{
+		return types.UserMe{}, errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
 		}
 	}
 
 	if !hasher.Compare(user.Password, input["password"].(string)) {
-		return types.UserBasicWithToken{}, errors.CustomError{
+		return types.UserMe{}, errors.CustomError{
 			Key: errors.InvalidCredentials,
 			Err: goErrors.New("invalid credentials"),
 		}
@@ -399,7 +399,7 @@ func (s *Service) SignIn(ctx context.Context, input map[string]interface{}) (typ
 
 	expiresIn, err := strconv.Atoi(os.Getenv("JWT_EXPIRES_IN"))
 	if err != nil {
-		return types.UserBasicWithToken{}, errors.CustomError{
+		return types.UserMe{}, errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
 		}
@@ -408,31 +408,40 @@ func (s *Service) SignIn(ctx context.Context, input map[string]interface{}) (typ
 	token, err := jwt.Create(os.Getenv("JWT_SECRET"), expiresIn, user.Id)
 	if err != nil {
 		if goErrors.Is(err, goJwt.ErrTokenExpired) || goErrors.Is(err, goJwt.ErrSignatureInvalid) {
-			return types.UserBasicWithToken{}, errors.CustomError{
+			return types.UserMe{}, errors.CustomError{
 				Key: errors.Unauthorized,
 				Err: err,
 			}
 		}
-		return types.UserBasicWithToken{}, errors.CustomError{
+		return types.UserMe{}, errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
 		}
 	}
 
-	return types.UserBasicWithToken{
-		Id:     user.Id,
-		Name:   user.Name,
-		Email:  user.Email,
-		Role:   user.Role,
-		Credit: user.Credit,
-		Token:  token,
+	hasStand, err := s.store.HasStand(user.Id)
+	if err != nil {
+		return types.UserMe{}, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return types.UserMe{
+		Id:       user.Id,
+		Name:     user.Name,
+		Email:    user.Email,
+		Role:     user.Role,
+		Credit:   user.Credit,
+		HasStand: hasStand,
+		Token:    token,
 	}, nil
 }
 
-func (s *Service) GetMe(ctx context.Context) (types.UserBasic, error) {
+func (s *Service) GetMe(ctx context.Context) (types.UserMe, error) {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
-		return types.UserBasic{}, errors.CustomError{
+		return types.UserMe{}, errors.CustomError{
 			Key: errors.Unauthorized,
 			Err: goErrors.New("user id not found in context"),
 		}
@@ -441,22 +450,32 @@ func (s *Service) GetMe(ctx context.Context) (types.UserBasic, error) {
 	user, err := s.store.FindById(userId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
-			return types.UserBasic{}, errors.CustomError{
+			return types.UserMe{}, errors.CustomError{
 				Key: errors.NotFound,
 				Err: err,
 			}
 		}
-		return types.UserBasic{}, errors.CustomError{
+		return types.UserMe{}, errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
 		}
 	}
 
-	return types.UserBasic{
-		Id:     user.Id,
-		Name:   user.Name,
-		Email:  user.Email,
-		Role:   user.Role,
-		Credit: user.Credit,
+	hasStand, err := s.store.HasStand(userId)
+	if err != nil {
+		return types.UserMe{}, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	return types.UserMe{
+		Id:       user.Id,
+		Name:     user.Name,
+		Email:    user.Email,
+		Role:     user.Role,
+		Credit:   user.Credit,
+		HasStand: hasStand,
+		Token:    "",
 	}, nil
 }

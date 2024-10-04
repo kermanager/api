@@ -32,11 +32,12 @@ type UserBasic struct {
 	Credit int    `json:"credit" db:"credit"`
 }
 
-type UserBasicWithToken struct {
-	Id     int    `json:"id" db:"id"`
-	Name   string `json:"name" db:"name"`
-	Email  string `json:"email" db:"email"`
-	Role   string `json:"role" db:"role"`
-	Credit int    `json:"credit" db:"credit"`
-	Token  string `json:"token"`
+type UserMe struct {
+	Id       int    `json:"id" db:"id"`
+	Name     string `json:"name" db:"name"`
+	Email    string `json:"email" db:"email"`
+	Role     string `json:"role" db:"role"`
+	Credit   int    `json:"credit" db:"credit"`
+	Token    string `json:"token"`
+	HasStand bool   `json:"has_stand"`
 }

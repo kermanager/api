@@ -15,6 +15,7 @@ type UserStore interface {
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 	UpdateCredit(id int, amount int) error
+	HasStand(id int) (bool, error)
 }
 
 type Store struct {
@@ -104,4 +105,12 @@ func (s *Store) UpdateCredit(id int, amount int) error {
 	_, err := s.db.Exec(query, amount, id)
 
 	return err
+}
+
+func (s *Store) HasStand(id int) (bool, error) {
+	var count int
+	query := "SELECT COUNT(*) FROM stands WHERE user_id=$1"
+	err := s.db.Get(&count, query, id)
+
+	return count >= 1, err
 }
