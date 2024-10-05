@@ -11,6 +11,7 @@ type KermesseStore interface {
 	FindAll(filters map[string]interface{}) ([]types.Kermesse, error)
 	FindUsersInvite(id int) ([]types.UserBasic, error)
 	FindById(id int) (types.Kermesse, error)
+	Stats(id int, filters map[string]interface{}) (types.KermesseStats, error)
 	Create(input map[string]interface{}) error
 	Update(id int, input map[string]interface{}) error
 	End(id int) error
@@ -79,6 +80,105 @@ func (s *Store) FindUsersInvite(id int) ([]types.UserBasic, error) {
 	err := s.db.Select(&users, query, id)
 
 	return users, err
+}
+
+func (s *Store) Stats(id int, filters map[string]interface{}) (types.KermesseStats, error) {
+	standCount := 0
+	query := "SELECT COUNT(*) FROM kermesses_stands WHERE kermesse_id=$1"
+	err := s.db.Get(&standCount, query, id)
+	if err != nil {
+		return types.KermesseStats{}, err
+	}
+
+	tombolaCount := 0
+	if filters["manager_id"] != nil {
+		query := "SELECT COUNT(*) FROM tombolas WHERE kermesse_id=$1"
+		err := s.db.Get(&tombolaCount, query, id)
+		if err != nil {
+			return types.KermesseStats{}, err
+		}
+	}
+
+	userCount := 0
+	if filters["manager_id"] != nil || filters["parent_id"] != nil {
+		query := `
+			SELECT COUNT(*)
+			FROM kermesses_users ku
+			JOIN users u ON ku.user_id = u.id
+			WHERE ku.kermesse_id=$1
+		`
+		if filters["parent_id"] != nil {
+			query += fmt.Sprintf(" AND u.role='%v' AND u.parent_id=%v", types.UserRoleChild, filters["parent_id"])
+		}
+		err := s.db.Get(&userCount, query, id)
+		if err != nil {
+			return types.KermesseStats{}, err
+		}
+	}
+
+	interactionCount := 0
+	if filters["manager_id"] != nil || filters["stand_holder_id"] != nil {
+		query := `
+			SELECT COUNT(*)
+			FROM interactions i
+			JOIN stands s ON i.stand_id = s.id
+			WHERE i.kermesse_id=$1
+		`
+		if filters["stand_holder_id"] != nil {
+			query += fmt.Sprintf(" AND s.user_id=%v", filters["stand_holder_id"])
+		}
+		err := s.db.Get(&interactionCount, query, id)
+		if err != nil {
+			return types.KermesseStats{}, err
+		}
+	}
+
+	interactionIncome := 0
+	if filters["manager_id"] != nil || filters["stand_holder_id"] != nil {
+		query := `
+			SELECT COALESCE(SUM(i.credit), 0)
+			FROM interactions i
+			JOIN stands s ON i.stand_id = s.id
+			WHERE i.kermesse_id=$1
+		`
+		if filters["stand_holder_id"] != nil {
+			query += fmt.Sprintf(" AND s.user_id=%v", filters["stand_holder_id"])
+		}
+		err := s.db.Get(&interactionIncome, query, id)
+		if err != nil {
+			return types.KermesseStats{}, err
+		}
+	}
+
+	tombolaIncome := 0
+	if filters["manager_id"] != nil {
+		query := `
+		SELECT COALESCE(SUM(tb.price), 0)
+		FROM tickets t
+		JOIN tombolas tb ON t.tombola_id = tb.id
+		WHERE tb.kermesse_id=$1
+	`
+		err := s.db.Get(&tombolaIncome, query, id)
+		if err != nil {
+			return types.KermesseStats{}, err
+		}
+	}
+
+	points := 0
+	if filters["child_id"] != nil {
+		query := "SELECT COALESCE(SUM(point), 0) FROM interactions WHERE kermesse_id=$1 AND user_id=$2"
+		err = s.db.Get(&points, query, id, filters["child_id"])
+	}
+
+	return types.KermesseStats{
+		StandCount:        standCount,
+		TombolaCount:      tombolaCount,
+		UserCount:         userCount,
+		InteractionCount:  interactionCount,
+		InteractionIncome: interactionIncome,
+		TombolaIncome:     tombolaIncome,
+		Points:            points,
+	}, err
 }
 
 func (s *Store) FindById(id int) (types.Kermesse, error) {

@@ -14,7 +14,7 @@ import (
 type KermesseService interface {
 	GetAll(ctx context.Context) ([]types.Kermesse, error)
 	GetUsersInvite(ctx context.Context, id int) ([]types.UserBasic, error)
-	Get(ctx context.Context, id int) (types.Kermesse, error)
+	Get(ctx context.Context, id int) (types.KermesseWithStats, error)
 	Create(ctx context.Context, input map[string]interface{}) error
 	Update(ctx context.Context, id int, input map[string]interface{}) error
 	End(ctx context.Context, id int) error
@@ -85,22 +85,70 @@ func (s *Service) GetUsersInvite(ctx context.Context, id int) ([]types.UserBasic
 	return users, nil
 }
 
-func (s *Service) Get(ctx context.Context, id int) (types.Kermesse, error) {
+func (s *Service) Get(ctx context.Context, id int) (types.KermesseWithStats, error) {
+	userId, ok := ctx.Value(types.UserIDKey).(int)
+	if !ok {
+		return types.KermesseWithStats{}, errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user id not found in context"),
+		}
+	}
+	userRole, ok := ctx.Value(types.UserRoleKey).(string)
+	if !ok {
+		return types.KermesseWithStats{}, errors.CustomError{
+			Key: errors.Unauthorized,
+			Err: goErrors.New("user role not found in context"),
+		}
+	}
+
 	kermesse, err := s.store.FindById(id)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
-			return kermesse, errors.CustomError{
+			return types.KermesseWithStats{}, errors.CustomError{
 				Key: errors.NotFound,
 				Err: err,
 			}
 		}
-		return kermesse, errors.CustomError{
+		return types.KermesseWithStats{}, errors.CustomError{
 			Key: errors.InternalServerError,
 			Err: err,
 		}
 	}
 
-	return kermesse, nil
+	filters := map[string]interface{}{}
+	if userRole == types.UserRoleManager {
+		filters["manager_id"] = userId
+	} else if userRole == types.UserRoleParent {
+		filters["parent_id"] = userId
+	} else if userRole == types.UserRoleChild {
+		filters["child_id"] = userId
+	} else if userRole == types.UserRoleStandHolder {
+		filters["stand_holder_id"] = userId
+	}
+
+	stats, err := s.store.Stats(id, filters)
+	if err != nil {
+		return types.KermesseWithStats{}, errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
+
+	kermesseWithStats := types.KermesseWithStats{
+		Id:                kermesse.Id,
+		UserId:            kermesse.UserId,
+		Name:              kermesse.Name,
+		Description:       kermesse.Description,
+		Status:            kermesse.Status,
+		StandCount:        stats.StandCount,
+		TombolaCount:      stats.TombolaCount,
+		UserCount:         stats.UserCount,
+		InteractionCount:  stats.InteractionCount,
+		InteractionIncome: stats.InteractionIncome,
+		TombolaIncome:     stats.TombolaIncome,
+	}
+
+	return kermesseWithStats, nil
 }
 
 func (s *Service) Create(ctx context.Context, input map[string]interface{}) error {
