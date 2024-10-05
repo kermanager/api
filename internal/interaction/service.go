@@ -176,11 +176,13 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 				Err: goErrors.New("not enough stock"),
 			}
 		}
-		if user.Credit < totalPrice {
-			return errors.CustomError{
-				Key: errors.BadRequest,
-				Err: goErrors.New("not enough credit"),
-			}
+	}
+
+	// check user's credit
+	if user.Credit < totalPrice {
+		return errors.CustomError{
+			Key: errors.BadRequest,
+			Err: goErrors.New("not enough credit"),
 		}
 	}
 
