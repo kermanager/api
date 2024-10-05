@@ -65,7 +65,8 @@ CREATE TABLE "interactions" (
   "type" interactions_type_enum NOT NULL,
   "status" interactions_status_enum NOT NULL DEFAULT 'STARTED',
   "credit" INTEGER NOT NULL DEFAULT 0,
-  "point" INTEGER NOT NULL DEFAULT 0
+  "point" INTEGER NOT NULL DEFAULT 0,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 --- Table: Tombolas
@@ -87,5 +88,6 @@ CREATE TABLE "tickets" (
   "id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL REFERENCES "users"("id"), -- child
   "tombola_id" INTEGER NOT NULL REFERENCES "tombolas"("id"),
-  "is_winner" BOOLEAN NOT NULL DEFAULT FALSE
+  "is_winner" BOOLEAN NOT NULL DEFAULT FALSE,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 const (
 	InteractionTypeConsumption string = "CONSUMPTION"
 	InteractionTypeActivity    string = "ACTIVITY"
@@ -31,22 +33,24 @@ type InteractionKermesse struct {
 }
 
 type Interaction struct {
-	Id       int                 `json:"id" db:"id"`
-	Type     string              `json:"type" db:"type"`
-	Status   string              `json:"status" db:"status"`
-	Credit   int                 `json:"credit" db:"credit"`
-	Point    int                 `json:"point" db:"point"`
-	User     InteractionUser     `json:"user" db:"user"`
-	Stand    InteractionStand    `json:"stand" db:"stand"`
-	Kermesse InteractionKermesse `json:"kermesse" db:"kermesse"`
+	Id        int                 `json:"id" db:"id"`
+	Type      string              `json:"type" db:"type"`
+	Status    string              `json:"status" db:"status"`
+	Credit    int                 `json:"credit" db:"credit"`
+	Point     int                 `json:"point" db:"point"`
+	CreatedAt time.Time           `json:"created_at" db:"created_at"`
+	User      InteractionUser     `json:"user" db:"user"`
+	Stand     InteractionStand    `json:"stand" db:"stand"`
+	Kermesse  InteractionKermesse `json:"kermesse" db:"kermesse"`
 }
 
 type InteractionBasic struct {
-	Id     int              `json:"id" db:"id"`
-	Type   string           `json:"type" db:"type"`
-	Status string           `json:"status" db:"status"`
-	Credit int              `json:"credit" db:"credit"`
-	Point  int              `json:"point" db:"point"`
-	User   InteractionUser  `json:"user" db:"user"`
-	Stand  InteractionStand `json:"stand" db:"stand"`
+	Id        int              `json:"id" db:"id"`
+	Type      string           `json:"type" db:"type"`
+	Status    string           `json:"status" db:"status"`
+	Credit    int              `json:"credit" db:"credit"`
+	Point     int              `json:"point" db:"point"`
+	CreatedAt time.Time        `json:"created_at" db:"created_at"`
+	User      InteractionUser  `json:"user" db:"user"`
+	Stand     InteractionStand `json:"stand" db:"stand"`
 }

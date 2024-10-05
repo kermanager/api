@@ -34,6 +34,7 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.InteractionBasi
 			i.status AS status,
 			i.credit AS credit,
 			i.point AS point,
+			i.created_at AS created_at,
 			u.id AS "user.id",
 			u.name AS "user.name",
 			u.email AS "user.email",
@@ -60,6 +61,7 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.InteractionBasi
 	if filters["stand_holder_id"] != nil {
 		query += fmt.Sprintf(" AND s.user_id = %v", filters["stand_holder_id"])
 	}
+	query += " ORDER BY i.created_at DESC"
 	err := s.db.Select(&interactions, query)
 
 	return interactions, err
@@ -74,6 +76,7 @@ func (s *Store) FindById(id int) (types.Interaction, error) {
 			i.status AS status,
 			i.credit AS credit,
 			i.point AS point,
+			i.created_at AS created_at,
 			u.id AS "user.id",
 			u.name AS "user.name",
 			u.email AS "user.email",

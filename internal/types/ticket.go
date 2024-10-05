@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type TicketUser struct {
 	Id    int    `json:"id" db:"id"`
 	Name  string `json:"name" db:"name"`
@@ -23,9 +25,10 @@ type TicketKermesse struct {
 }
 
 type Ticket struct {
-	Id       int            `json:"id" db:"id"`
-	IsWinner bool           `json:"is_winner" db:"is_winner"`
-	User     TicketUser     `json:"user" db:"user"`
-	Tombola  TicketTombola  `json:"tombola" db:"tombola"`
-	Kermesse TicketKermesse `json:"kermesse" db:"kermesse"`
+	Id        int            `json:"id" db:"id"`
+	IsWinner  bool           `json:"is_winner" db:"is_winner"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
+	User      TicketUser     `json:"user" db:"user"`
+	Tombola   TicketTombola  `json:"tombola" db:"tombola"`
+	Kermesse  TicketKermesse `json:"kermesse" db:"kermesse"`
 }
