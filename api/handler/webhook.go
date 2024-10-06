@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/kermanager/internal/user"
 	"github.com/stripe/stripe-go/v79"
@@ -38,29 +37,25 @@ func HandleWebhook(userService user.UserService) http.HandlerFunc {
 				return
 			}
 
-			userIDStr := session.Metadata["user_id"]
-			userId, err := strconv.Atoi(userIDStr)
-			if err != nil {
-				http.Error(w, "Invalid user ID", http.StatusBadRequest)
-				return
-			}
-
-			log.Printf("user ID: %d\n", userId)
-
-			creditStr := session.Metadata["credit"]
-			credit, err := strconv.Atoi(creditStr)
-			if err != nil {
+			creditStr, ok := session.Metadata["credit"]
+			if !ok {
 				http.Error(w, "Invalid credit", http.StatusBadRequest)
 				return
 			}
 
-			log.Printf("credit: %d\n", credit)
+			userIdStr, ok := session.Metadata["user_id"]
+			if !ok {
+				http.Error(w, "Invalid credit", http.StatusBadRequest)
+				return
+			}
+
+			log.Printf("user ID: %v\n", userIdStr)
+			log.Printf("credit: %v\n", creditStr)
 
 			err = userService.UpdateCredit(map[string]interface{}{
-				"id":     userId,
-				"credit": credit,
+				"user_id": userIdStr,
+				"credit":  creditStr,
 			})
-			log.Printf("Error: %v\n", err)
 			if err != nil {
 				http.Error(w, "Error updating user credit", http.StatusInternalServerError)
 				return
