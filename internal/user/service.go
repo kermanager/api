@@ -18,8 +18,8 @@ import (
 )
 
 type UserService interface {
-	GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
-	GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
+	GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasicWithPoints, error)
+	GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasicWithPoints, error)
 	Get(ctx context.Context, id int) (types.UserBasic, error)
 	Update(ctx context.Context, id int, input map[string]interface{}) error
 	UpdateCredit(userId, credit int) error
@@ -43,7 +43,7 @@ func NewService(store UserStore, resendService resend.ResendService) *Service {
 	}
 }
 
-func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error) {
+func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.UserBasicWithPoints, error) {
 	filters := map[string]interface{}{}
 	if params["kermesse_id"] != nil {
 		filters["kermesse_id"] = params["kermesse_id"]
@@ -59,7 +59,7 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	return users, nil
 }
 
-func (s *Service) GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error) {
+func (s *Service) GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasicWithPoints, error) {
 	filters := map[string]interface{}{}
 	if params["kermesse_id"] != nil {
 		filters["kermesse_id"] = params["kermesse_id"]

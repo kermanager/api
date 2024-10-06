@@ -41,3 +41,12 @@ type UserMe struct {
 	Token    string `json:"token"`
 	HasStand bool   `json:"has_stand"`
 }
+
+type UserBasicWithPoints struct {
+	Id     int    `json:"id" db:"id"`
+	Name   string `json:"name" db:"name"`
+	Email  string `json:"email" db:"email"`
+	Role   string `json:"role" db:"role"`
+	Credit int    `json:"credit" db:"credit"`
+	Points int    `json:"points" db:"points"`
+}

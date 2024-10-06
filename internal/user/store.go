@@ -8,8 +8,8 @@ import (
 )
 
 type UserStore interface {
-	FindAll(filters map[string]interface{}) ([]types.UserBasic, error)
-	FindAllChildren(id int, filters map[string]interface{}) ([]types.UserBasic, error)
+	FindAll(filters map[string]interface{}) ([]types.UserBasicWithPoints, error)
+	FindAllChildren(id int, filters map[string]interface{}) ([]types.UserBasicWithPoints, error)
 	FindById(id int) (types.User, error)
 	FindByEmail(email string) (types.User, error)
 	Create(input map[string]interface{}) error
@@ -28,43 +28,49 @@ func NewStore(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) FindAll(filters map[string]interface{}) ([]types.UserBasic, error) {
-	users := []types.UserBasic{}
+func (s *Store) FindAll(filters map[string]interface{}) ([]types.UserBasicWithPoints, error) {
+	users := []types.UserBasicWithPoints{}
 	query := `
 		SELECT DISTINCT
 			u.id AS id,
 			u.name AS name,
 			u.email AS email,
 			u.role AS role,
-			u.credit AS credit
+			u.credit AS credit,
+			COALESCE(SUM(i.point), 0) AS points
 		FROM users u
 		FULL OUTER JOIN kermesses_users ku ON u.id = ku.user_id
+		LEFT JOIN interactions i ON u.id = i.user_id AND ku.kermesse_id = i.kermesse_id
 		WHERE 1=1
 	`
 	if filters["kermesse_id"] != nil {
 		query += fmt.Sprintf(" AND ku.kermesse_id = %v", filters["kermesse_id"])
 	}
+	query += " GROUP BY u.id ORDER BY points DESC"
 	err := s.db.Select(&users, query)
 
 	return users, err
 }
 
-func (s *Store) FindAllChildren(id int, filters map[string]interface{}) ([]types.UserBasic, error) {
-	users := []types.UserBasic{}
+func (s *Store) FindAllChildren(id int, filters map[string]interface{}) ([]types.UserBasicWithPoints, error) {
+	users := []types.UserBasicWithPoints{}
 	query := `
 		SELECT DISTINCT
 			u.id AS id,
 			u.name AS name,
 			u.email AS email,
 			u.role AS role,
-			u.credit AS credit
+			u.credit AS credit,
+			COALESCE(SUM(i.point), 0) AS points
 		FROM users u
 		FULL OUTER JOIN kermesses_users ku ON u.id = ku.user_id
+		LEFT JOIN interactions i ON u.id = i.user_id AND ku.kermesse_id = i.kermesse_id
 		WHERE u.role=$1 AND u.parent_id=$2
 	`
 	if filters["kermesse_id"] != nil {
 		query += fmt.Sprintf(" AND ku.kermesse_id = %v", filters["kermesse_id"])
 	}
+	query += " GROUP BY u.id ORDER BY points DESC"
 	err := s.db.Select(&users, query, types.UserRoleChild, id)
 
 	return users, err
