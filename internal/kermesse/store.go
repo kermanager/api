@@ -9,7 +9,7 @@ import (
 
 type KermesseStore interface {
 	FindAll(filters map[string]interface{}) ([]types.Kermesse, error)
-	FindUsersInvite(id int) ([]types.UserBasic, error)
+	FindUsersInvite(id int) ([]types.UserBasicWithPoints, error)
 	FindById(id int) (types.Kermesse, error)
 	Stats(id int, filters map[string]interface{}) (types.KermesseStats, error)
 	Create(input map[string]interface{}) error
@@ -64,15 +64,16 @@ func (s *Store) FindAll(filters map[string]interface{}) ([]types.Kermesse, error
 	return kermesses, err
 }
 
-func (s *Store) FindUsersInvite(id int) ([]types.UserBasic, error) {
-	users := []types.UserBasic{}
+func (s *Store) FindUsersInvite(id int) ([]types.UserBasicWithPoints, error) {
+	users := []types.UserBasicWithPoints{}
 	query := `
 		SELECT DISTINCT
 			u.id AS id,
 			u.name AS name,
 			u.email AS email,
 			u.role AS role,
-			u.credit AS credit
+			u.credit AS credit,
+			u.id AS points
 		FROM users u
 		LEFT JOIN kermesses_users ku ON u.id = ku.user_id
 		WHERE u.id IS NOT NULL AND role='CHILD' AND ku.kermesse_id IS NULL OR ku.kermesse_id != $1
