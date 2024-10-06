@@ -32,7 +32,7 @@ func main() {
 	defer db.Close()
 
 	// create & run the API server
-	address := fmt.Sprintf("%s:%s", os.Getenv("HOST"), os.Getenv("PORT"))
+	address := fmt.Sprintf(":%s", os.Getenv("PORT"))
 	server := api.NewAPIServer(address, db)
 	if err := server.Start(); err != nil {
 		log.Fatalf("Error starting the server: %v", err)
