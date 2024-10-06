@@ -22,7 +22,7 @@ type UserService interface {
 	GetAllChildren(ctx context.Context, params map[string]interface{}) ([]types.UserBasic, error)
 	Get(ctx context.Context, id int) (types.UserBasic, error)
 	Update(ctx context.Context, id int, input map[string]interface{}) error
-	UpdateCredit(input map[string]interface{}) error
+	UpdateCredit(userId, credit int) error
 	Invite(ctx context.Context, input map[string]interface{}) error
 	Pay(ctx context.Context, input map[string]interface{}) error
 
@@ -218,15 +218,8 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	return nil
 }
 
-func (s *Service) UpdateCredit(input map[string]interface{}) error {
-	inputUserId, err := utils.GetIntFromMap(input, "user_id")
-	if err != nil {
-		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: err,
-		}
-	}
-	user, err := s.store.FindById(inputUserId)
+func (s *Service) UpdateCredit(userId, credit int) error {
+	user, err := s.store.FindById(userId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
@@ -246,15 +239,7 @@ func (s *Service) UpdateCredit(input map[string]interface{}) error {
 		}
 	}
 
-	credit, err := utils.GetIntFromMap(input, "credit")
-	if err != nil {
-		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: err,
-		}
-	}
-
-	err = s.store.UpdateCredit(inputUserId, credit)
+	err = s.store.UpdateCredit(userId, credit)
 	if err != nil {
 		return errors.CustomError{
 			Key: errors.InternalServerError,
