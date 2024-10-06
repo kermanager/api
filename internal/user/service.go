@@ -14,6 +14,7 @@ import (
 	"github.com/kermanager/pkg/hasher"
 	"github.com/kermanager/pkg/jwt"
 	"github.com/kermanager/pkg/utils"
+	"github.com/kermanager/third_party/resend"
 )
 
 type UserService interface {
@@ -31,12 +32,14 @@ type UserService interface {
 }
 
 type Service struct {
-	store UserStore
+	store         UserStore
+	resendService resend.ResendService
 }
 
-func NewService(store UserStore) *Service {
+func NewService(store UserStore, resendService resend.ResendService) *Service {
 	return &Service{
-		store: store,
+		store:         store,
+		resendService: resendService,
 	}
 }
 
@@ -203,10 +206,14 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 		}
 	}
 
-	// TODO: Send email :
-	// - To: input["email"]
-	// - Subject: "Invitation to join our platform"
-	// - Body: "You have been invited to join our platform. Your credentials are as follows: Email: input["email"], Password: randomPassword"
+	// send email to child
+	_, err = s.resendService.SendInvitationEmail(input["email"].(string), input["email"].(string), randomPassword)
+	if err != nil {
+		return errors.CustomError{
+			Key: errors.InternalServerError,
+			Err: err,
+		}
+	}
 
 	return nil
 }

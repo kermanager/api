@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -13,6 +14,7 @@ import (
 	"github.com/kermanager/internal/ticket"
 	"github.com/kermanager/internal/tombola"
 	"github.com/kermanager/internal/user"
+	"github.com/kermanager/third_party/resend"
 	"github.com/rs/cors"
 )
 
@@ -31,13 +33,15 @@ func NewAPIServer(address string, db *sqlx.DB) *APIServer {
 func (s *APIServer) Start() error {
 	router := mux.NewRouter()
 
+	resendService := resend.NewResendService(os.Getenv("RESEND_API_KEY"), os.Getenv("RESEND_FROM_EMAIL"))
+
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods(http.MethodGet)
 
 	userStore := user.NewStore(s.db)
-	userService := user.NewService(userStore)
+	userService := user.NewService(userStore, resendService)
 	userHandler := handler.NewUserHandler(userService, userStore)
 	userHandler.RegisterRoutes(router)
 
