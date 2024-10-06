@@ -37,19 +37,16 @@ func NewService(store InteractionStore, standStore stand.StandStore, userStore u
 }
 
 func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]types.InteractionBasic, error) {
-
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return nil, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	userRole, ok := ctx.Value(types.UserRoleKey).(string)
 	if !ok {
 		return nil, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user role not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -68,8 +65,7 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	interactions, err := s.store.FindAll(filters)
 	if err != nil {
 		return nil, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -81,13 +77,11 @@ func (s *Service) Get(ctx context.Context, id int) (types.Interaction, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return interaction, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return interaction, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -98,42 +92,36 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	standId, err := utils.GetIntFromMap(input, "stand_id")
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: err,
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 	stand, err := s.standStore.FindById(standId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	user, err := s.userStore.FindById(userId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -143,14 +131,12 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	})
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 	if !canCreate {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -161,8 +147,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		quantity, err = utils.GetIntFromMap(input, "quantity")
 		if err != nil {
 			return errors.CustomError{
-				Key: errors.BadRequest,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		totalPrice = stand.Price * quantity
@@ -172,8 +157,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	if stand.Type == types.InteractionTypeConsumption {
 		if stand.Stock < quantity {
 			return errors.CustomError{
-				Key: errors.BadRequest,
-				Err: goErrors.New("not enough stock"),
+				Err: goErrors.New(errors.NotEnoughStock),
 			}
 		}
 	}
@@ -181,8 +165,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	// check user's credit
 	if user.Credit < totalPrice {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("not enough credit"),
+			Err: goErrors.New(errors.NotEnoughCredits),
 		}
 	}
 
@@ -191,8 +174,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 		err = s.standStore.UpdateStock(standId, -quantity)
 		if err != nil {
 			return errors.CustomError{
-				Key: errors.InternalServerError,
-				Err: err,
+				Err: goErrors.New(errors.ServerError),
 			}
 		}
 	}
@@ -201,8 +183,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	err = s.userStore.UpdateCredit(userId, -totalPrice)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -210,8 +191,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	err = s.userStore.UpdateCredit(stand.UserId, totalPrice)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -222,8 +202,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	err = s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -235,20 +214,17 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if interaction.Type != types.InteractionTypeActivity {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("interaction type is not activity"),
+			Err: goErrors.New(errors.IsNotAnActivity),
 		}
 	}
 
@@ -256,19 +232,16 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 	if kermesse.Status == types.KermesseStatusEnded {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("kermesse is ended"),
+			Err: goErrors.New(errors.KermesseAlreadyEnded),
 		}
 	}
 
@@ -276,27 +249,23 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if stand.UserId != userId {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -306,8 +275,7 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	})
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

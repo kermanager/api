@@ -40,8 +40,7 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	stands, err := s.store.FindAll(params)
 	if err != nil {
 		return nil, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -53,13 +52,11 @@ func (s *Service) Get(ctx context.Context, id int) (types.Stand, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return stand, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return stand, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -70,8 +67,7 @@ func (s *Service) GetCurrent(ctx context.Context) (types.Stand, error) {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return types.Stand{}, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -79,13 +75,11 @@ func (s *Service) GetCurrent(ctx context.Context) (types.Stand, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return stand, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return stand, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -96,8 +90,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	input["user_id"] = userId
@@ -105,8 +98,7 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	err := s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -118,35 +110,30 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if stand.UserId != userId {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("user is not the holder of the stand"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	err = s.store.Update(id, input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -157,16 +144,14 @@ func (s *Service) UpdateCurrent(ctx context.Context, input map[string]interface{
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	err := s.store.UpdateByUserId(userId, input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

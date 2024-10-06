@@ -36,15 +36,13 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Ticket, error) {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return nil, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	userRole, ok := ctx.Value(types.UserRoleKey).(string)
 	if !ok {
 		return nil, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user role not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -60,8 +58,7 @@ func (s *Service) GetAll(ctx context.Context) ([]types.Ticket, error) {
 	tickets, err := s.store.FindAll(filters)
 	if err != nil {
 		return nil, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -73,13 +70,11 @@ func (s *Service) Get(ctx context.Context, id int) (types.Ticket, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return ticket, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return ticket, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -90,57 +85,49 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	tombolaId, err := utils.GetIntFromMap(input, "tombola_id")
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: err,
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 	tombola, err := s.tombolaStore.FindById(tombolaId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if tombola.Status != types.TombolaStatusStarted {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("tombola is not started or already finished"),
+			Err: goErrors.New(errors.TombolaAlreadyEnded),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	user, err := s.userStore.FindById(userId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	// check if user has enough credit
 	if user.Credit < tombola.Price {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("not enough credit"),
+			Err: goErrors.New(errors.NotEnoughCredits),
 		}
 	}
 
@@ -151,14 +138,12 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	})
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 	if !canCreate {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -166,18 +151,15 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	err = s.userStore.UpdateCredit(userId, -tombola.Price)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	input["user_id"] = userId
-
 	err = s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

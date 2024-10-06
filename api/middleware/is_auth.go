@@ -18,24 +18,21 @@ func IsAuth(handlerFunc errors.ErrorHandler, store user.UserStore, roles ...stri
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			return errors.CustomError{
-				Key: errors.Unauthorized,
-				Err: goErrors.New("token is required"),
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 
 		tokenParts := strings.Split(token, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			return errors.CustomError{
-				Key: errors.Unauthorized,
-				Err: goErrors.New("invalid token"),
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 
 		userId, err := jwt.GetTokenUserId(tokenParts[1], os.Getenv("JWT_SECRET"))
 		if err != nil {
 			return errors.CustomError{
-				Key: errors.Unauthorized,
-				Err: goErrors.New("invalid token"),
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 
@@ -54,8 +51,7 @@ func IsAuth(handlerFunc errors.ErrorHandler, store user.UserStore, roles ...stri
 			}
 			if !roleAllowed {
 				return errors.CustomError{
-					Key: errors.Forbidden,
-					Err: goErrors.New("user does not have the required role"),
+					Err: goErrors.New(errors.NotAllowed),
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	goErrors "errors"
 	"net/http"
 	"strconv"
 
@@ -46,8 +47,7 @@ func (h *UserHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, users); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -62,8 +62,7 @@ func (h *UserHandler) GetAllChildren(w http.ResponseWriter, r *http.Request) err
 
 	if err := json.Write(w, http.StatusOK, users); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -75,8 +74,7 @@ func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -87,8 +85,7 @@ func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, user); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -100,16 +97,14 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -119,8 +114,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -131,8 +125,7 @@ func (h *UserHandler) Invite(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -142,8 +135,7 @@ func (h *UserHandler) Invite(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -154,8 +146,7 @@ func (h *UserHandler) Pay(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -165,8 +156,7 @@ func (h *UserHandler) Pay(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -177,8 +167,7 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -188,8 +177,7 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -200,8 +188,7 @@ func (h *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -212,8 +199,7 @@ func (h *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, response); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -228,8 +214,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, response); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

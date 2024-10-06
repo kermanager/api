@@ -1,6 +1,7 @@
 package handler
 
 import (
+	goErrors "errors"
 	"net/http"
 	"strconv"
 
@@ -41,8 +42,7 @@ func (h *InteractionHandler) GetAll(w http.ResponseWriter, r *http.Request) erro
 
 	if err := json.Write(w, http.StatusOK, interactions); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -54,8 +54,7 @@ func (h *InteractionHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -66,8 +65,7 @@ func (h *InteractionHandler) Get(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, interaction); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -78,8 +76,7 @@ func (h *InteractionHandler) Create(w http.ResponseWriter, r *http.Request) erro
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -89,8 +86,7 @@ func (h *InteractionHandler) Create(w http.ResponseWriter, r *http.Request) erro
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -102,16 +98,14 @@ func (h *InteractionHandler) Update(w http.ResponseWriter, r *http.Request) erro
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -121,8 +115,7 @@ func (h *InteractionHandler) Update(w http.ResponseWriter, r *http.Request) erro
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

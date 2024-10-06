@@ -1,22 +1,14 @@
 package errors
 
 const (
-	BadRequest           = "BAD_REQUEST"
-	Unauthorized         = "UNAUTHORIZED"
-	Forbidden            = "FORBIDDEN"
-	NotFound             = "NOT_FOUND"
-	MethodNotAllowed     = "METHOD_NOT_ALLOWED"
-	Conflict             = "CONFLICT"
-	UnsupportedMediaType = "UNSUPPORTED_MEDIA_TYPE"
-	TooManyRequests      = "TOO_MANY_REQUESTS"
-	NotImplemented       = "NOT_IMPLEMENTED"
-	BadGateway           = "BAD_GATEWAY"
-	ServiceUnavailable   = "SERVICE_UNAVAILABLE"
-	GatewayTimeout       = "GATEWAY_TIMEOUT"
-	InternalServerError  = "INTERNAL_SERVER_ERROR"
-
-	EmailAlreadyExists = "EMAIL_ALREADY_EXISTS"
-	InvalidCredentials = "INVALID_CREDENTIALS"
-	InvalidCode        = "INVALID_CODE"
-	ExpiredCode        = "EXPIRED_CODE"
+	ServerError          = "SERVER_ERROR"
+	NotAllowed           = "NOT_ALLOWED"
+	EmailAlreadyExists   = "EMAIL_ALREADY_EXISTS"
+	InvalidInput         = "INVALID_INPUT"
+	InvalidCredentials   = "INVALID_CREDENTIALS"
+	NotEnoughCredits     = "NOT_ENOUGH_CREDITS"
+	KermesseAlreadyEnded = "KERMESSE_ALREADY_ENDED"
+	TombolaAlreadyEnded  = "TOMBOLA_ALREADY_ENDED"
+	NotEnoughStock       = "NOT_ENOUGH_STOCK"
+	IsNotAnActivity      = "IS_NOT_AN_ACTIVITY"
 )

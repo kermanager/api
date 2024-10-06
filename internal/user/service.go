@@ -52,8 +52,7 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	users, err := s.store.FindAll(filters)
 	if err != nil {
 		return nil, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -69,16 +68,14 @@ func (s *Service) GetAllChildren(ctx context.Context, params map[string]interfac
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return nil, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	users, err := s.store.FindAllChildren(userId, filters)
 	if err != nil {
 		return nil, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -90,13 +87,11 @@ func (s *Service) Get(ctx context.Context, id int) (types.UserBasic, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return types.UserBasic{}, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return types.UserBasic{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -114,34 +109,29 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if user.Id != userId {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	if !hasher.Compare(user.Password, input["password"].(string)) {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("invalid password"),
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 
@@ -154,8 +144,7 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	err = s.store.Update(id, input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -166,16 +155,14 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	_, err := s.store.FindByEmail(input["email"].(string))
 	if err == nil {
 		return errors.CustomError{
-			Key: errors.EmailAlreadyExists,
-			Err: goErrors.New("email already exists"),
+			Err: goErrors.New(errors.EmailAlreadyExists),
 		}
 	}
 
 	randomPassword, err := generator.RandomPassword(8)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -187,8 +174,7 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -201,8 +187,7 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	})
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -210,8 +195,7 @@ func (s *Service) Invite(ctx context.Context, input map[string]interface{}) erro
 	_, err = s.resendService.SendInvitationEmail(input["email"].(string), input["email"].(string), randomPassword)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -223,27 +207,23 @@ func (s *Service) UpdateCredit(userId, credit int) error {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 	if user.Role != types.UserRoleParent {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	err = s.store.UpdateCredit(userId, credit)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -254,79 +234,68 @@ func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
 	childId, err := utils.GetIntFromMap(input, "child_id")
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: err,
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 	child, err := s.store.FindById(childId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("child not found"),
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	parentId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	parent, err := s.store.FindById(parentId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("parent not found"),
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if child.ParentId == nil || *child.ParentId != parent.Id {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	amount, error := utils.GetIntFromMap(input, "amount")
 	if error != nil {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: error,
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 	if parent.Credit < amount {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("insufficient credit"),
+			Err: goErrors.New(errors.NotEnoughCredits),
 		}
 	}
 
 	err = s.store.UpdateCredit(childId, amount)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	err = s.store.UpdateCredit(parentId, -amount)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -337,8 +306,7 @@ func (s *Service) SignUp(ctx context.Context, input map[string]interface{}) erro
 	_, err := s.store.FindByEmail(input["email"].(string))
 	if err == nil {
 		return errors.CustomError{
-			Key: errors.EmailAlreadyExists,
-			Err: goErrors.New("email already exists"),
+			Err: goErrors.New(errors.EmailAlreadyExists),
 		}
 	}
 
@@ -351,16 +319,14 @@ func (s *Service) SignUp(ctx context.Context, input map[string]interface{}) erro
 
 	if input["role"] == types.UserRoleChild {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("role cannot be child"),
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 
 	err = s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -372,28 +338,24 @@ func (s *Service) SignIn(ctx context.Context, input map[string]interface{}) (typ
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return types.UserMe{}, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidCredentials),
 			}
 		}
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if !hasher.Compare(user.Password, input["password"].(string)) {
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InvalidCredentials,
-			Err: goErrors.New("invalid credentials"),
+			Err: goErrors.New(errors.InvalidCredentials),
 		}
 	}
 
 	expiresIn, err := strconv.Atoi(os.Getenv("JWT_EXPIRES_IN"))
 	if err != nil {
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -401,21 +363,18 @@ func (s *Service) SignIn(ctx context.Context, input map[string]interface{}) (typ
 	if err != nil {
 		if goErrors.Is(err, goJwt.ErrTokenExpired) || goErrors.Is(err, goJwt.ErrSignatureInvalid) {
 			return types.UserMe{}, errors.CustomError{
-				Key: errors.Unauthorized,
-				Err: err,
+				Err: goErrors.New(errors.InvalidCredentials),
 			}
 		}
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	hasStand, err := s.store.HasStand(user.Id)
 	if err != nil {
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -434,8 +393,7 @@ func (s *Service) GetMe(ctx context.Context) (types.UserMe, error) {
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
@@ -443,21 +401,18 @@ func (s *Service) GetMe(ctx context.Context) (types.UserMe, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return types.UserMe{}, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.NotAllowed),
 			}
 		}
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	hasStand, err := s.store.HasStand(userId)
 	if err != nil {
 		return types.UserMe{}, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

@@ -3,7 +3,6 @@ package errors
 import "net/http"
 
 type CustomError struct {
-	Key string
 	Err error
 }
 
@@ -12,37 +11,19 @@ func (ce CustomError) Error() string {
 }
 
 func (ce CustomError) StatusCode() int {
-	switch ce.Key {
-	case BadRequest:
-		return http.StatusBadRequest
-	case Unauthorized:
-	case InvalidCredentials:
-	case InvalidCode:
-	case ExpiredCode:
-		return http.StatusUnauthorized
-	case Forbidden:
+	switch ce.Err.Error() {
+	case NotAllowed:
+	case NotEnoughCredits:
+	case KermesseAlreadyEnded:
+	case TombolaAlreadyEnded:
+	case NotEnoughStock:
+	case IsNotAnActivity:
 		return http.StatusForbidden
-	case NotFound:
-		return http.StatusNotFound
-	case MethodNotAllowed:
-		return http.StatusMethodNotAllowed
-	case Conflict:
+	case InvalidInput:
 	case EmailAlreadyExists:
-		return http.StatusConflict
-	case UnsupportedMediaType:
-		return http.StatusUnsupportedMediaType
-	case TooManyRequests:
-		return http.StatusTooManyRequests
-	case NotImplemented:
-		return http.StatusNotImplemented
-	case BadGateway:
-		return http.StatusBadGateway
-	case ServiceUnavailable:
-		return http.StatusServiceUnavailable
-	case GatewayTimeout:
-		return http.StatusGatewayTimeout
-	case InternalServerError:
-	default:
+	case InvalidCredentials:
+		return http.StatusBadRequest
+	case ServerError:
 		return http.StatusInternalServerError
 	}
 

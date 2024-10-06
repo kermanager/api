@@ -1,6 +1,7 @@
 package handler
 
 import (
+	goErrors "errors"
 	"net/http"
 	"strconv"
 
@@ -45,8 +46,7 @@ func (h *KermesseHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, kermesses); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -58,8 +58,7 @@ func (h *KermesseHandler) GetUsersInvite(w http.ResponseWriter, r *http.Request)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -70,8 +69,7 @@ func (h *KermesseHandler) GetUsersInvite(w http.ResponseWriter, r *http.Request)
 
 	if err := json.Write(w, http.StatusOK, users); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -83,8 +81,7 @@ func (h *KermesseHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -95,8 +92,7 @@ func (h *KermesseHandler) Get(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, kermesse); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -107,8 +103,7 @@ func (h *KermesseHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -118,8 +113,7 @@ func (h *KermesseHandler) Create(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -131,16 +125,14 @@ func (h *KermesseHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -150,8 +142,7 @@ func (h *KermesseHandler) Update(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -163,8 +154,7 @@ func (h *KermesseHandler) End(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -174,8 +164,7 @@ func (h *KermesseHandler) End(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -187,16 +176,14 @@ func (h *KermesseHandler) AddUser(w http.ResponseWriter, r *http.Request) error 
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 	input["kermesse_id"] = id
@@ -207,8 +194,7 @@ func (h *KermesseHandler) AddUser(w http.ResponseWriter, r *http.Request) error 
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -220,16 +206,14 @@ func (h *KermesseHandler) AddStand(w http.ResponseWriter, r *http.Request) error
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 	input["kermesse_id"] = id
@@ -240,8 +224,7 @@ func (h *KermesseHandler) AddStand(w http.ResponseWriter, r *http.Request) error
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

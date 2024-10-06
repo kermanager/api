@@ -1,6 +1,7 @@
 package handler
 
 import (
+	goErrors "errors"
 	"net/http"
 	"strconv"
 
@@ -42,8 +43,7 @@ func (h *StandHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, stands); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -55,8 +55,7 @@ func (h *StandHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -67,8 +66,7 @@ func (h *StandHandler) Get(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, stand); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -83,8 +81,7 @@ func (h *StandHandler) GetCurrent(w http.ResponseWriter, r *http.Request) error 
 
 	if err := json.Write(w, http.StatusOK, stand); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -95,8 +92,7 @@ func (h *StandHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -106,8 +102,7 @@ func (h *StandHandler) Create(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -118,8 +113,7 @@ func (h *StandHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -129,8 +123,7 @@ func (h *StandHandler) Update(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

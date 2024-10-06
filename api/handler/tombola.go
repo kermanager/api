@@ -1,6 +1,7 @@
 package handler
 
 import (
+	goErrors "errors"
 	"net/http"
 	"strconv"
 
@@ -42,8 +43,7 @@ func (h *TombolaHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, tombolas); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -55,8 +55,7 @@ func (h *TombolaHandler) Get(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -67,8 +66,7 @@ func (h *TombolaHandler) Get(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusOK, tombola); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -79,8 +77,7 @@ func (h *TombolaHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -90,8 +87,7 @@ func (h *TombolaHandler) Create(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusCreated, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -103,16 +99,14 @@ func (h *TombolaHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	var input map[string]interface{}
 	if err := json.Parse(r, &input); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -122,8 +116,7 @@ func (h *TombolaHandler) Update(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -135,8 +128,7 @@ func (h *TombolaHandler) End(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -146,8 +138,7 @@ func (h *TombolaHandler) End(w http.ResponseWriter, r *http.Request) error {
 
 	if err := json.Write(w, http.StatusAccepted, nil); err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 

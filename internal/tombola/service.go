@@ -40,8 +40,7 @@ func (s *Service) GetAll(ctx context.Context, params map[string]interface{}) ([]
 	tombolas, err := s.store.FindAll(filters)
 	if err != nil {
 		return nil, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -53,13 +52,11 @@ func (s *Service) Get(ctx context.Context, id int) (types.Tombola, error) {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return tombola, errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return tombola, errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -70,50 +67,43 @@ func (s *Service) Create(ctx context.Context, input map[string]interface{}) erro
 	kermesseId, error := utils.GetIntFromMap(input, "kermesse_id")
 	if error != nil {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: error,
+			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 	kermesse, err := s.kermesseStore.FindById(kermesseId)
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if kermesse.Status == types.KermesseStatusEnded {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("kermesse is ended"),
+			Err: goErrors.New(errors.KermesseAlreadyEnded),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if kermesse.UserId != userId {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	err = s.store.Create(input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -125,13 +115,11 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -139,42 +127,36 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if kermesse.Status == types.KermesseStatusEnded {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("kermesse is ended"),
+			Err: goErrors.New(errors.KermesseAlreadyEnded),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if kermesse.UserId != userId {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	err = s.store.Update(id, input)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -186,13 +168,11 @@ func (s *Service) End(ctx context.Context, id int) error {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
@@ -200,49 +180,42 @@ func (s *Service) End(ctx context.Context, id int) error {
 	if err != nil {
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
-				Key: errors.NotFound,
-				Err: err,
+				Err: goErrors.New(errors.InvalidInput),
 			}
 		}
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
 	if kermesse.Status == types.KermesseStatusEnded {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("kermesse is ended"),
+			Err: goErrors.New(errors.KermesseAlreadyEnded),
 		}
 	}
 
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
-			Key: errors.Unauthorized,
-			Err: goErrors.New("user id not found in context"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if kermesse.UserId != userId {
 		return errors.CustomError{
-			Key: errors.Forbidden,
-			Err: goErrors.New("forbidden"),
+			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 
 	if tombola.Status != types.TombolaStatusStarted {
 		return errors.CustomError{
-			Key: errors.BadRequest,
-			Err: goErrors.New("tombola is not started"),
+			Err: goErrors.New(errors.TombolaAlreadyEnded),
 		}
 	}
 
 	err = s.store.SetWinner(id)
 	if err != nil {
 		return errors.CustomError{
-			Key: errors.InternalServerError,
-			Err: err,
+			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
