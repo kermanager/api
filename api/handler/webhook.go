@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -44,6 +45,8 @@ func HandleWebhook(userService user.UserService) http.HandlerFunc {
 				return
 			}
 
+			log.Printf("user ID: %d\n", userId)
+
 			creditStr := session.Metadata["credit"]
 			credit, err := strconv.Atoi(creditStr)
 			if err != nil {
@@ -51,10 +54,13 @@ func HandleWebhook(userService user.UserService) http.HandlerFunc {
 				return
 			}
 
+			log.Printf("credit: %d\n", credit)
+
 			err = userService.UpdateCredit(map[string]interface{}{
 				"id":     userId,
 				"credit": credit,
 			})
+			log.Printf("Error: %v\n", err)
 			if err != nil {
 				http.Error(w, "Error updating user credit", http.StatusInternalServerError)
 				return
