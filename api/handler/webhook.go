@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/kermanager/internal/user"
-	"github.com/stripe/stripe-go/v79"
-	"github.com/stripe/stripe-go/v79/webhook"
+	"github.com/stripe/stripe-go"
+	"github.com/stripe/stripe-go/webhook"
 )
 
 func HandleWebhook(userService user.UserService) http.HandlerFunc {
