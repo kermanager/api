@@ -11,4 +11,5 @@ const (
 	TombolaAlreadyEnded  = "TOMBOLA_ALREADY_ENDED"
 	NotEnoughStock       = "NOT_ENOUGH_STOCK"
 	IsNotAnActivity      = "IS_NOT_AN_ACTIVITY"
+	TombolaNotEnded      = "TOMBOLA_NOT_ENDED"
 )

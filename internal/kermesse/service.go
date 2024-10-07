@@ -229,7 +229,7 @@ func (s *Service) End(ctx context.Context, id int) error {
 	}
 	if !canEnd {
 		return errors.CustomError{
-			Err: goErrors.New(errors.NotAllowed),
+			Err: goErrors.New(errors.TombolaNotEnded),
 		}
 	}
 

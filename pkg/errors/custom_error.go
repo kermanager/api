@@ -18,6 +18,7 @@ func (ce CustomError) StatusCode() int {
 	case TombolaAlreadyEnded:
 	case NotEnoughStock:
 	case IsNotAnActivity:
+	case TombolaNotEnded:
 		return http.StatusForbidden
 	case InvalidInput:
 	case EmailAlreadyExists:
