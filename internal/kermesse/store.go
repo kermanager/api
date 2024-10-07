@@ -92,7 +92,7 @@ func (s *Store) Stats(id int, filters map[string]interface{}) (types.KermesseSta
 	}
 
 	tombolaCount := 0
-	if filters["manager_id"] != nil {
+	if filters["manager_id"] != nil || filters["child_id"] != nil {
 		query := "SELECT COUNT(*) FROM tombolas WHERE kermesse_id=$1"
 		err := s.db.Get(&tombolaCount, query, id)
 		if err != nil {
@@ -118,7 +118,7 @@ func (s *Store) Stats(id int, filters map[string]interface{}) (types.KermesseSta
 	}
 
 	interactionCount := 0
-	if filters["manager_id"] != nil || filters["parent_id"] != nil || filters["stand_holder_id"] != nil {
+	if filters["manager_id"] != nil || filters["parent_id"] != nil || filters["child_id"] != nil || filters["stand_holder_id"] != nil {
 		query := `
 			SELECT COUNT(*)
 			FROM interactions i
@@ -128,6 +128,9 @@ func (s *Store) Stats(id int, filters map[string]interface{}) (types.KermesseSta
 		`
 		if filters["parent_id"] != nil {
 			query += fmt.Sprintf(" AND u.parent_id=%v", filters["parent_id"])
+		}
+		if filters["child_id"] != nil {
+			query += fmt.Sprintf(" AND i.user_id=%v", filters["child_id"])
 		}
 		if filters["stand_holder_id"] != nil {
 			query += fmt.Sprintf(" AND s.user_id=%v", filters["stand_holder_id"])
