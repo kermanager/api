@@ -118,13 +118,17 @@ func (s *Store) Stats(id int, filters map[string]interface{}) (types.KermesseSta
 	}
 
 	interactionCount := 0
-	if filters["manager_id"] != nil || filters["stand_holder_id"] != nil {
+	if filters["manager_id"] != nil || filters["parent_id"] != nil || filters["stand_holder_id"] != nil {
 		query := `
 			SELECT COUNT(*)
 			FROM interactions i
 			JOIN stands s ON i.stand_id = s.id
+			JOIN users u ON i.user_id = u.id
 			WHERE i.kermesse_id=$1
 		`
+		if filters["parent_id"] != nil {
+			query += fmt.Sprintf(" AND u.parent_id=%v", filters["parent_id"])
+		}
 		if filters["stand_holder_id"] != nil {
 			query += fmt.Sprintf(" AND s.user_id=%v", filters["stand_holder_id"])
 		}
