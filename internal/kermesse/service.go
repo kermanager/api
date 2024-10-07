@@ -174,12 +174,6 @@ func (s *Service) Update(ctx context.Context, id int, input map[string]interface
 		}
 	}
 
-	if kermesse.Status == types.KermesseStatusEnded {
-		return errors.CustomError{
-			Err: goErrors.New(errors.KermesseAlreadyEnded),
-		}
-	}
-
 	userId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
 		return errors.CustomError{
