@@ -75,10 +75,13 @@ func (s *Store) FindUsersInvite(id int) ([]types.UserBasicWithPoints, error) {
 			u.credit AS credit,
 			u.id AS points
 		FROM users u
-		LEFT JOIN kermesses_users ku ON u.id = ku.user_id
-		WHERE u.id IS NOT NULL AND role='CHILD' AND ku.kermesse_id IS NULL OR ku.kermesse_id != $1
+		WHERE u.role=$1 and u.id NOT IN (
+			SELECT ku.user_id
+			FROM kermesses_users ku
+			WHERE ku.kermesse_id=$2
+		)
 	`
-	err := s.db.Select(&users, query, id)
+	err := s.db.Select(&users, query, types.UserRoleChild, id)
 
 	return users, err
 }

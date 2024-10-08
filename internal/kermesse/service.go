@@ -304,12 +304,6 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 			Err: goErrors.New(errors.ServerError),
 		}
 	}
-	if child.Role != types.UserRoleChild {
-		fmt.Println("ERROR 7 : ", err)
-		return errors.CustomError{
-			Err: goErrors.New(errors.NotAllowed),
-		}
-	}
 
 	// invite child
 	err = s.store.AddUser(input)
