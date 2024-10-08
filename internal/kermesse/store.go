@@ -174,7 +174,7 @@ func (s *Store) Stats(id int, filters map[string]interface{}) (types.KermesseSta
 
 	points := 0
 	if filters["child_id"] != nil {
-		query := "SELECT COALESCE(SUM(point), 0) FROM interactions WHERE kermesse_id=$1 AND user_id=$2"
+		query := "SELECT SUM(point) FROM interactions WHERE kermesse_id=$1 AND user_id=$2"
 		err = s.db.Get(&points, query, id, filters["child_id"])
 	}
 
