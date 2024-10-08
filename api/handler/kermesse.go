@@ -2,6 +2,7 @@ package handler
 
 import (
 	goErrors "errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -189,6 +190,7 @@ func (h *KermesseHandler) AddUser(w http.ResponseWriter, r *http.Request) error 
 	input["kermesse_id"] = id
 
 	if err := h.service.AddUser(r.Context(), input); err != nil {
+		fmt.Println("AddUser ERROR : ", err)
 		return err
 	}
 
