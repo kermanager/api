@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	goErrors "errors"
-	"fmt"
 
 	"github.com/kermanager/internal/types"
 	"github.com/kermanager/internal/user"
@@ -253,7 +252,6 @@ func (s *Service) End(ctx context.Context, id int) error {
 func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) error {
 	kermesse, err := s.store.FindById(input["kermesse_id"].(int))
 	if err != nil {
-		fmt.Println("ERROR 1 : ", err)
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
 				Err: goErrors.New(errors.InvalidInput),
@@ -265,7 +263,6 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 	}
 
 	if kermesse.Status == types.KermesseStatusEnded {
-		fmt.Println("ERROR 2 : ", err)
 		return errors.CustomError{
 			Err: goErrors.New(errors.KermesseAlreadyEnded),
 		}
@@ -273,13 +270,11 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 
 	managerId, ok := ctx.Value(types.UserIDKey).(int)
 	if !ok {
-		fmt.Println("ERROR 3 : ", err)
 		return errors.CustomError{
 			Err: goErrors.New(errors.NotAllowed),
 		}
 	}
 	if kermesse.UserId != managerId {
-		fmt.Println("ERROR 4 : ", err)
 		return errors.CustomError{
 			Err: goErrors.New(errors.NotAllowed),
 		}
@@ -287,14 +282,12 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 
 	childId, error := utils.GetIntFromMap(input, "user_id")
 	if error != nil {
-		fmt.Println("ERROR 5 : ", err)
 		return errors.CustomError{
 			Err: goErrors.New(errors.InvalidInput),
 		}
 	}
 	child, err := s.userStore.FindById(childId)
 	if err != nil {
-		fmt.Println("ERROR 6 : ", err)
 		if goErrors.Is(err, sql.ErrNoRows) {
 			return errors.CustomError{
 				Err: goErrors.New(errors.InvalidInput),
@@ -308,18 +301,26 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 	// invite child
 	err = s.store.AddUser(input)
 	if err != nil {
-		fmt.Println("ERROR 8 : ", err)
 		return errors.CustomError{
 			Err: goErrors.New(errors.ServerError),
 		}
 	}
 
-	// invite child parent if exists
+	// invite child parent if exists and is not invited
 	if child.ParentId != nil {
+		canAddUser, err := s.store.CanAddUser(kermesse.Id, *child.ParentId)
+		if err != nil {
+			return errors.CustomError{
+				Err: goErrors.New(errors.ServerError),
+			}
+		}
+		if !canAddUser {
+			return nil
+		}
+
 		input["user_id"] = child.ParentId
 		err = s.store.AddUser(input)
 		if err != nil {
-			fmt.Println("ERROR 9 : ", err)
 			return errors.CustomError{
 				Err: goErrors.New(errors.ServerError),
 			}

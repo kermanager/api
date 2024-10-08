@@ -17,6 +17,7 @@ type KermesseStore interface {
 	End(id int) error
 	CanEnd(id int) (bool, error)
 
+	CanAddUser(id int, userId int) (bool, error)
 	AddUser(input map[string]interface{}) error
 	CanAddStand(standId int) (bool, error)
 	AddStand(input map[string]interface{}) error
@@ -234,6 +235,20 @@ func (s *Store) AddUser(input map[string]interface{}) error {
 	_, err := s.db.Exec(query, input["kermesse_id"], input["user_id"])
 
 	return err
+}
+
+func (s *Store) CanAddUser(id int, userId int) (bool, error) {
+	var isTrue bool
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM kermesses_users ku
+  		WHERE ku.kermesse_id = $1 AND ku.user_id = $2
+		) AS is_true
+ 	`
+	err := s.db.QueryRow(query, id, userId).Scan(&isTrue)
+
+	return !isTrue, err
 }
 
 func (s *Store) CanAddStand(standId int) (bool, error) {
