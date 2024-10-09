@@ -299,6 +299,14 @@ func (s *Service) Pay(ctx context.Context, input map[string]interface{}) error {
 		}
 	}
 
+	// send email to child
+	_, err = s.resendService.SendPaymentEmail(child.Email, amount)
+	if err != nil {
+		return errors.CustomError{
+			Err: goErrors.New(errors.ServerError),
+		}
+	}
+
 	return nil
 }
 

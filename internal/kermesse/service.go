@@ -9,6 +9,7 @@ import (
 	"github.com/kermanager/internal/user"
 	"github.com/kermanager/pkg/errors"
 	"github.com/kermanager/pkg/utils"
+	"github.com/kermanager/third_party/resend"
 )
 
 type KermesseService interface {
@@ -24,14 +25,16 @@ type KermesseService interface {
 }
 
 type Service struct {
-	store     KermesseStore
-	userStore user.UserStore
+	store         KermesseStore
+	userStore     user.UserStore
+	resendService resend.ResendService
 }
 
-func NewService(store KermesseStore, userStore user.UserStore) *Service {
+func NewService(store KermesseStore, userStore user.UserStore, resendService resend.ResendService) *Service {
 	return &Service{
-		store:     store,
-		userStore: userStore,
+		store:         store,
+		userStore:     userStore,
+		resendService: resendService,
 	}
 }
 
@@ -306,6 +309,14 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 		}
 	}
 
+	// send email to child
+	_, err = s.resendService.SendKermesseInvitationEmail(child.Email, kermesse.Name, kermesse.Description)
+	if err != nil {
+		return errors.CustomError{
+			Err: goErrors.New(errors.ServerError),
+		}
+	}
+
 	// invite child parent if exists and is not invited
 	if child.ParentId != nil {
 		canAddUser, err := s.store.CanAddUser(kermesse.Id, *child.ParentId)
@@ -320,6 +331,25 @@ func (s *Service) AddUser(ctx context.Context, input map[string]interface{}) err
 
 		input["user_id"] = child.ParentId
 		err = s.store.AddUser(input)
+		if err != nil {
+			return errors.CustomError{
+				Err: goErrors.New(errors.ServerError),
+			}
+		}
+
+		// send email to parent
+		parent, err := s.userStore.FindById(*child.ParentId)
+		if err != nil {
+			if goErrors.Is(err, sql.ErrNoRows) {
+				return errors.CustomError{
+					Err: goErrors.New(errors.InvalidInput),
+				}
+			}
+			return errors.CustomError{
+				Err: goErrors.New(errors.ServerError),
+			}
+		}
+		_, err = s.resendService.SendKermesseInvitationEmail(parent.Email, kermesse.Name, kermesse.Description)
 		if err != nil {
 			return errors.CustomError{
 				Err: goErrors.New(errors.ServerError),

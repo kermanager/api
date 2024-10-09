@@ -51,7 +51,7 @@ func (s *APIServer) Start() error {
 	standHandler.RegisterRoutes(router)
 
 	kermesseStore := kermesse.NewStore(s.db)
-	kermesseService := kermesse.NewService(kermesseStore, userStore)
+	kermesseService := kermesse.NewService(kermesseStore, userStore, resendService)
 	kermesseHandler := handler.NewKermesseHandler(kermesseService, userStore)
 	kermesseHandler.RegisterRoutes(router)
 
